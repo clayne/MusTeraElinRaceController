@@ -1,8 +1,6 @@
 #include "Store.h"
 
 namespace Mus {
-	std::shared_mutex log_lock;
-
 	std::string ModPrefix = "TeraElinRace Controller : ";
 	std::string UsePrefix = "Mus ";
 

@@ -1,8 +1,6 @@
 #pragma once
 
 namespace Mus {
-	extern std::shared_mutex log_lock;
-
 	extern std::string ModPrefix;
 	extern std::string UsePrefix;
 

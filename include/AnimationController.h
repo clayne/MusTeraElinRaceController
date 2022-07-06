@@ -38,7 +38,7 @@ namespace Mus {
 
 	class AnimationController {
 		RE::FormID id;
-		std::string_view plugin;
+		std::string name;
 
 	public:
 		bool IsValidActor = true;
@@ -56,40 +56,42 @@ namespace Mus {
 
 		RE::Actor* elin;
 
-		RE::NiNode* EarL11;
-		RE::NiNode* EarR11;
-		RE::NiNode* EarL12;
-		RE::NiNode* EarR12;
-		RE::NiNode* EarL13;
-		RE::NiNode* EarR13;
+		RE::NiAVObject* EarL11;
+		RE::NiAVObject* EarR11;
+		RE::NiAVObject* EarL12;
+		RE::NiAVObject* EarR12;
+		RE::NiAVObject* EarL13;
+		RE::NiAVObject* EarR13;
 
-		RE::NiNode* EarL21;
-		RE::NiNode* EarR21;
-		RE::NiNode* EarL22;
-		RE::NiNode* EarR22;
-		RE::NiNode* EarL23;
-		RE::NiNode* EarR23;
+		RE::NiAVObject* EarL21;
+		RE::NiAVObject* EarR21;
+		RE::NiAVObject* EarL22;
+		RE::NiAVObject* EarR22;
+		RE::NiAVObject* EarL23;
+		RE::NiAVObject* EarR23;
 
-		RE::NiNode* EarL31;
-		RE::NiNode* EarR31;
-		RE::NiNode* EarL32;
-		RE::NiNode* EarR32;
+		RE::NiAVObject* EarL31;
+		RE::NiAVObject* EarR31;
+		RE::NiAVObject* EarL32;
+		RE::NiAVObject* EarR32;
 
-		RE::NiNode* TailBone1;
-		RE::NiNode* TailBone2;
-		RE::NiNode* TailBone3;
+		RE::NiAVObject* TailBone1;
+		RE::NiAVObject* TailBone2;
+		RE::NiAVObject* TailBone3;
 
-		RE::NiNode* TailSpine;
+		RE::NiAVObject* TailSpine;
 
 		bool isValidNode = true;
 
 		void updateEarsAnimation();
 		void updateTailsAnimation();
 
+		void resetAnimation();
+
 		bool assignEarsNodes();
 		bool assignTailsNodes();
 
-		RE::NiNode* GetVirtualNode(RE::BSFixedString nodeName);
+		RE::NiAVObject* GetVirtualNode(const RE::BSFixedString nodeName);
 
 		ControllerConfig animConfig;
 	};

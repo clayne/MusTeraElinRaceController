@@ -64,9 +64,9 @@ namespace Mus {
 		ActorManager();
 		~ActorManager();
 
-		[[nodiscard]] static ActorManager* instance() {
+		[[nodiscard]] static ActorManager& instance() {
 			static ActorManager instance;
-			return &instance;
+			return instance;
 		}
 
 		bool RegisterActor(RE::Actor* actor, ControllerConfig config);

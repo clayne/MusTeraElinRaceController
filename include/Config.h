@@ -43,13 +43,18 @@ namespace Mus {
         [[nodiscard]] inline bool GetRaceController() const noexcept {
             return RaceController;
         }
+        [[nodiscard]] inline bool GetBeforeSaveCompatible() const noexcept {
+            return BeforeSaveCompatible;
+        }
 
     private:
         articuno_serde(ar) {
             ar <=> articuno::kv(RaceController, "RaceController");
+            ar <=> articuno::kv(BeforeSaveCompatible, "BeforeSaveCompatible");
         }
 
         bool RaceController = true;
+        bool BeforeSaveCompatible = false;
 
         friend class articuno::access;
     };

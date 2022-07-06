@@ -30,7 +30,7 @@ namespace Mus {
         };
 
         bool isPlayerRaceTeraElin();
-
+        bool RemoveHeadPartElinRacesForm();
     private:
         RE::BGSListForm* RunTimeHeadPartFormList;
 
@@ -38,7 +38,8 @@ namespace Mus {
         RE::FormID RunTimeTeraElinRaceVampFormID = NULL;
 
         RE::FormID HeadPartFormList = 0x000A803F;
-
+        RE::FormID ArgonianFormList = 0x000A8039;
+        RE::FormID KhajiitFormList = 0x000A8036;
 
         RE::FormID TeraElinRaceFormID = 0x001000;
         RE::FormID TeraElinRaceVampFormID = 0x001001;
@@ -49,7 +50,8 @@ namespace Mus {
         bool RaceController();
         bool GetRuntimeData();
         bool CreateHeadPartFormList();
-        void AddHeadPartRacesForm();
+        void AddHeadPartRacesForm(RE::BGSListForm* formlist, bool isAddElin);
+        bool SetNonePlayable(RE::BGSHeadPart* headpart);
         bool ResolveCompatibleHairParts();
     };
 

@@ -2,9 +2,7 @@
 
 namespace Mus {
     bool RegisterElinAnimation(RE::StaticFunctionTag*, RE::Actor* actor) {
-        auto* am = ActorManager::instance();
-        if (!am)
-            return false;
+        auto& am = ActorManager::instance();
 
         //am->RegisterActor(actor);
         return true;

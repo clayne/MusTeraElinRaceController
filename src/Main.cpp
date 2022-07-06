@@ -124,8 +124,8 @@ namespace {
     {
         log::trace("Building hook...");
 
-        g_frameEventDispatcher.addListener(ActorManager::instance());
-        hook();
+        /*g_frameEventDispatcher.addListener(&ActorManager::instance());
+        hook();*/
 
         EventHandler::GetSingleton().Register();
     }

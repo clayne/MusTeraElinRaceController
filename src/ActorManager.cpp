@@ -56,7 +56,7 @@ namespace Mus {
 	void ActorManager::TrackingActors()
 	{
 		AIProcessManager* aiprocess = AIProcessManager::GetSingleton();
-		for (int index = 0; index < aiprocess->actorsHigh.size(); index++)
+		for (RE::BSTArrayBase::size_type index = 0; index < aiprocess->actorsHigh.size(); index++)
 		{
 			RE::NiPointer<RE::Actor> actorpointer = RE::Actor::LookupByHandle(aiprocess->actorsHigh[index]);
 			if (!actorpointer)
@@ -80,12 +80,12 @@ namespace Mus {
 		if (!actor || !actor->loadedData || !actor->loadedData->data3D)
 			return false;
 
-		if (ActorMap.find(actor->formID) == ActorMap.end())
+		if (ActorMap.find(actor->formID) != ActorMap.end())
 			return true;
 
 		auto controller = AnimationController(actor, config);
 		ActorMap.insert(std::make_pair(actor->formID, controller));
-		logger::info("Registered the Actor on Elin animation : {} {:x}", actor->GetDisplayFullName(), actor->formID);
+		logger::info("Registered the {} on Elin animation : {} {:x}", (actor->formID == 0x14) ? "Player" : "Actor", actor->GetDisplayFullName(), actor->formID);
 
 		return true;
 	}
@@ -94,8 +94,10 @@ namespace Mus {
 	{
 		auto* Player = RE::PlayerCharacter::GetSingleton();
 
-		if (!Player || !Player->loadedData || !Player->loadedData->data3D)
+		if (!Player || !Player->loadedData || !Player->loadedData->data3D || !Player->loadedData->data3D.get() || IsPlayerElin.load())
 			return false;
+
+		logger::info("Try to register the Player on Elin animation : {} {:x}", Player->GetDisplayFullName(), Player->formID);
 
 		ControllerConfig config;
 

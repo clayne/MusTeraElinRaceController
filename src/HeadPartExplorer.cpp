@@ -9,7 +9,6 @@ namespace Mus {
             logger::error("Missing TESDataHandler!");
             return false;
         }
-        logger::trace("Get data handler success");
 
         auto& items = handler->GetFormArray(RE::FormType::HeadPart);
         logger::trace("Get Formarray related headpart");
@@ -20,13 +19,23 @@ namespace Mus {
                 RE::FormID formID = items[index]->formID;
                 RE::BGSHeadPart* data = reinterpret_cast<RE::BGSHeadPart*>(items[index]);
 
-                if (data) {
-                    if (IsPlayerble(data->flags) && (data->validRaces && IsNotForCustomRaceOnly(data->validRaces->forms)))
+                if (data && IsPlayerble(data->flags)) {
+                    if (!data->validRaces && !IsHairPart(data->type))
+                    {
+                        NoneRacesHeadPartFormMap.insert(std::make_pair(formID, data));
+                        logger::trace("found and insert {} {} {:x} haven't validraces {}on formmap", GetModNameByID(formID), data->formEditorID.c_str(), formID, (data->IsExtraPart() ? "extra " : ""));
+                    }
+                    else if (data->validRaces && IsNotForCustomRaceOnly(data->validRaces->forms))
                     {
                         if (IsHairPart(data->type))
                         {
                             HeadPartFormMap.insert(std::make_pair(formID, data));
-                            logger::trace("found and insert {} {} {:x} hair {}on formmap", GetModNameByID(formID), data->formEditorID.c_str(), formID, (data->IsExtraPart() ? "" : "extra "));
+                            logger::trace("found and insert {} {} {:x} hair {}on formmap", GetModNameByID(formID), data->formEditorID.c_str(), formID, (data->IsExtraPart() ? "extra " : ""));
+                        }
+                        else if (Config::GetSingleton().GetSetting().GetFeature().GetRaceController() && Config::GetSingleton().GetSetting().GetFeature().GetBeforeSaveCompatible())
+                        {
+                            OtherHeadPartFormMap.insert(std::make_pair(formID, data));
+                            logger::trace("found and insert {} {} {:x} not hair {}on formmap", GetModNameByID(formID), data->formEditorID.c_str(), formID, (data->IsExtraPart() ? "extra " : ""));
                         }
                     }
                 }

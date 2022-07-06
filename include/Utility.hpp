@@ -161,7 +161,46 @@ namespace Mus {
         }
     }
 
+    inline std::string spaces(int n) {
+        auto s = std::string(n, ' ');
+        return s;
+    }
+
     namespace nif {
+        inline bool visitObjects(RE::NiAVObject* parent, std::function<bool(RE::NiAVObject*, int)> functor, int depth = 0) {
+            if (!parent) return false;
+            RE::NiNode* node = reinterpret_cast<RE::NiNode*>(parent);
+            if (node) {
+                if (functor(parent, depth))
+                    return true;
+
+                for (std::uint16_t i = 0; i < node->GetChildren().size(); i++) {
+                    RE::NiAVObject* object = node->GetChildren()[i] ? node->GetChildren()[i].get() : nullptr;
+                    if (object) {
+                        if (visitObjects(object, functor, depth + 1))
+                            return true;
+                    }
+                }
+            }
+            else if (functor(parent, depth))
+                return true;
+
+            return false;
+        }
+
+        inline bool printStuff(RE::NiAVObject* avObj, int depth) {
+            if (!avObj) return false;
+            std::string sss = spaces(depth);
+            const char* ss = sss.c_str();
+            logger::debug("{}avObj Name = {}, RTTI = {}", ss, avObj->name.c_str(), avObj->GetRTTI() ? avObj->GetRTTI()->name : "");
+
+            RE::NiNode* node = reinterpret_cast<RE::NiNode*>(avObj);
+            if (node) {
+                logger::debug("{}node {}, RTTI {}", ss, node->name.c_str(), node->GetRTTI() ? avObj->GetRTTI()->name : "");
+            }
+            return false;
+        }
+
         class TaskupdateNode : public SKSE::TaskInterface
         {
         public:
@@ -182,13 +221,6 @@ namespace Mus {
             bool dawnpass;
         };
 
-        inline const char* GetVirtualNodeName(RE::BSFixedString nodeName)
-        {
-            std::string name = UsePrefix;
-            name += nodeName.c_str();
-            return name.c_str();
-        }
-
         inline void setBSFixedString(RE::BSFixedString& ref, const char* name)
         {
             ref = name;
@@ -199,7 +231,7 @@ namespace Mus {
             setBSFixedString(node->name, name);
         }
 
-        inline RE::NiNode* addParentToNode(RE::NiNode* node, const char* name)
+        inline RE::NiAVObject* addParentToNode(RE::NiAVObject* node, const char* name)
         {
             if (!node)
                 return nullptr;
@@ -216,6 +248,14 @@ namespace Mus {
             setNiNodeName(newParent, name);
             node->DecRefCount();
             return newParent;
+        }
+
+        inline const RE::BSFixedString GetVirtualNodeName(RE::BSFixedString nodeName)
+        {
+            std::string name = UsePrefix;
+            name += nodeName.c_str();
+            RE::BSFixedString newName(name.c_str());
+            return newName;
         }
     }
 }

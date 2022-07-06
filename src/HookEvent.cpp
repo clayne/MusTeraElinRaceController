@@ -32,12 +32,12 @@ namespace Mus {
 	{
 		if (name == "Main Menu")
 		{
-			logger::info("Detected Main Menu");
+			logger::debug("Detected Main Menu");
 			IsMainMenu.store(true);
 		}
 		else if (name == "RaceSex Menu")
 		{
-			logger::info("Detected RaceSex Menu");
+			logger::debug("Detected RaceSex Menu");
 			IsRaceSexMenu.store(true);
 		}
 	};
@@ -57,15 +57,15 @@ namespace Mus {
 
 	EventResult EventHandler::ProcessEvent(const RE::TESLoadGameEvent* evn, RE::BSTEventSource<RE::TESLoadGameEvent>*) 
 	{
-		logger::trace("Detected Load Game Event");
+		logger::debug("Detected Load Game Event");
 		IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
-		if (!ActorManager::instance()->RegisterPlayer())
+		if (!ActorManager::instance().RegisterPlayer())
 		{
 			logger::error("Failed register player on ElinAnimation");
 			return EventResult::kContinue;
 		}
-		ActorManager::instance()->ChangerPlayerState();
-
+		ActorManager::instance().ChangerPlayerState();
+		RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
 		return EventResult::kContinue;
 	}
 }

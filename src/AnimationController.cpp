@@ -3,12 +3,12 @@
 namespace Mus {
 	AnimationController::AnimationController(RE::Actor* actor, ControllerConfig config)
 	{
-		if (actor)
+		if (!actor)
 			return;
 		
 		elin = actor;
 		id = actor->formID;
-		plugin = GetModNameByID(id);
+		name = actor->GetDisplayFullName();
 		animConfig = config;
 	}
 
@@ -19,7 +19,7 @@ namespace Mus {
 
 	void AnimationController::update(RE::Actor* actor) 
 	{
-		if (!actor || !actor->loadedData || !actor->loadedData->data3D)
+		if (!actor || !actor->loadedData || !actor->loadedData->data3D || !actor->loadedData->data3D.get())
 			return;
 
 		elin = actor;
@@ -39,6 +39,11 @@ namespace Mus {
 	}
 
 	void AnimationController::updateTailsAnimation()
+	{
+
+	}
+
+	void AnimationController::resetAnimation()
 	{
 
 	}
@@ -82,37 +87,42 @@ namespace Mus {
 		return isValidNode;
 	}
 
-	RE::NiNode* AnimationController::GetVirtualNode(RE::BSFixedString nodeName)
+	RE::NiAVObject* AnimationController::GetVirtualNode(const RE::BSFixedString nodeName)
 	{
-		RE::NiNode* findNode;
-		if ((findNode = dynamic_cast<RE::NiNode*>(elin->loadedData->data3D->GetObjectByName(nif::GetVirtualNodeName(nodeName)))))
+		if (!isValidNode)
+			return nullptr;
+
+		RE::NiAVObject* node = elin->loadedData->data3D.get();
+
+		RE::NiAVObject* findNode;
+		if ((findNode = node->GetObjectByName(nif::GetVirtualNodeName(nodeName))))
 			return findNode;
 		
 		if (std::find(VNodeEntries.begin(), VNodeEntries.end(), nodeName.c_str()) != VNodeEntries.end())
 		{
 			isCannotReadNode(false);
-			logger::debug("{} / {:x} : {} is already attached, but cannot use it", plugin, id, nodeName.c_str());
+			logger::debug("{} / {:x} : {} is already attached, but cannot use it", name.c_str(), id, nodeName.c_str());
 			isValidNode = false;
 			return nullptr;
 		}
 
-		RE::NiNode* origNode = dynamic_cast<RE::NiNode*>(elin->loadedData->data3D->GetObjectByName(nodeName));
+		RE::NiAVObject* origNode = node->GetObjectByName(nodeName);
 		if (!origNode)
 		{
-			logger::debug("{} / {:x} : {} is missing", plugin, id, nodeName.c_str());
+			logger::debug("{} / {:x} : {} is missing", name.c_str(), id, nodeName.c_str());
 			isValidNode = false;
 			return nullptr;
 		}
 
-		if (!(findNode = nif::addParentToNode(origNode, nif::GetVirtualNodeName(nodeName))))
+		if (!(findNode = nif::addParentToNode(origNode, nif::GetVirtualNodeName(nodeName).c_str())))
 		{
-			logger::debug("{} / {:x} : {} is not attached on parent node of {}", plugin, id, nif::GetVirtualNodeName(nodeName), nodeName.c_str());
+			logger::debug("{} / {:x} : {} is not attached on parent node of {}", name.c_str(), id, nif::GetVirtualNodeName(nodeName), nodeName.c_str());
 			isValidNode = false;
 			return nullptr;
 		}
 
-		logger::info("{} / {:x} : {} is attached on parent node of {}", plugin, id, nif::GetVirtualNodeName(nodeName), nodeName.c_str());
-		VNodeEntries.emplace_back(nif::GetVirtualNodeName(nodeName));
+		logger::info("{} / {:x} : {} is attached on parent node of {}", name.c_str(), id, nif::GetVirtualNodeName(nodeName), nodeName.c_str());
+		VNodeEntries.emplace_back(nif::GetVirtualNodeName(nodeName).c_str());
 		return findNode;
 	}
 
@@ -136,7 +146,7 @@ namespace Mus {
 		}
 		else if (!isEnd && isCannotReadCount == 0)
 		{
-			logger::debug("{} / {:x} : Reset Virtual Nodes", plugin, id);
+			logger::debug("{} / {:x} : Reset Virtual Nodes", name, id);
 			VNodeEntries.clear();
 			isCannotReadCount--;
 		}

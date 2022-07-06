@@ -39,7 +39,8 @@ namespace Mus {
 
     bool RaceCompatibility::isPlayerRaceTeraElin()
     {
-        auto* P = RE::PlayerCharacter::GetSingleton();
+        RE::PlayerCharacter* P = RE::PlayerCharacter::GetSingleton();
+
         if (!P)
             return false;
 
@@ -61,26 +62,95 @@ namespace Mus {
         if (!RunTimeHeadPartFormList->formType.all(RE::FormType::FormList)) 
             return false;
 
-        CompatibleHeadPartRaces = reinterpret_cast<RE::BGSListForm*>(RunTimeHeadPartFormList->CreateDuplicateForm(true, (void*)CompatibleHeadPartRaces));
-        if (!CompatibleHeadPartRaces)
+        if (!(CompatibleHeadPartRaces = reinterpret_cast<RE::BGSListForm*>(RunTimeHeadPartFormList->CreateDuplicateForm(true, (void*)CompatibleHeadPartRaces))))
             return false;
 
         logger::trace("Create NewHeadPartFormList finished");
         return true;
     };
 
-    void RaceCompatibility::AddHeadPartRacesForm() 
+    bool RaceCompatibility::SetNonePlayable(RE::BGSHeadPart* headpart)
+    {
+        if (!headpart || !HeadPartExplorer::GetSingleton().IsPlayerble(headpart->flags))
+            return false;
+
+        auto& flag = headpart->flags;
+        flag -= RE::BGSHeadPart::Flag::kPlayable;
+        return true;
+    }
+
+    void RaceCompatibility::AddHeadPartRacesForm(RE::BGSListForm* formlist, bool isAddElin)
     {
         auto& HeadPartFormList = RunTimeHeadPartFormList->forms;
-        for (int index = 0; index < HeadPartFormList.size(); index++) 
+        for (RE::BSTArrayBase::size_type index = 0; index < HeadPartFormList.size(); index++) 
         {
             if (HeadPartFormList[index])
-                CompatibleHeadPartRaces->AddForm(HeadPartFormList[index]);
+                formlist->AddForm(HeadPartFormList[index]);
         }
 
-        CompatibleHeadPartRaces->AddForm(RE::TESForm::LookupByID(RunTimeTeraElinRaceFormID));
-        CompatibleHeadPartRaces->AddForm(RE::TESForm::LookupByID(RunTimeTeraElinRaceVampFormID));
+        auto* argonian = reinterpret_cast<RE::BGSListForm*>(RE::TESForm::LookupByID(ArgonianFormList));
+        if (argonian)
+        {
+            for (RE::BSTArrayBase::size_type index = 0; index < argonian->forms.size(); index++)
+            {
+                if (argonian->forms[index])
+                    formlist->AddForm(argonian->forms[index]);
+            }
+        }
+
+        auto* khajiit = reinterpret_cast<RE::BGSListForm*>(RE::TESForm::LookupByID(KhajiitFormList));
+        if (khajiit)
+        {
+            for (RE::BSTArrayBase::size_type index = 0; index < khajiit->forms.size(); index++)
+            {
+                if (khajiit->forms[index])
+                    formlist->AddForm(khajiit->forms[index]);
+            }
+        }
+
+        if (isAddElin)
+        {
+            CompatibleHeadPartRaces->AddForm(RE::TESForm::LookupByID(RunTimeTeraElinRaceFormID));
+            CompatibleHeadPartRaces->AddForm(RE::TESForm::LookupByID(RunTimeTeraElinRaceVampFormID));
+        }
     };
+
+    bool RaceCompatibility::RemoveHeadPartElinRacesForm()
+    {
+        if (!Config::GetSingleton().GetSetting().GetFeature().GetBeforeSaveCompatible() || !Config::GetSingleton().GetSetting().GetFeature().GetRaceController() || IsPlayerElin)
+            return false;
+
+        auto& HPE = HeadPartExplorer::GetSingleton();
+
+        logger::info("Try to cleanup save script trashes... {}", HPE.OtherHeadPartFormMap.size());
+
+        std::vector<RE::FormID> doneHeadpartFormList;
+        for (auto& h : HPE.OtherHeadPartFormMap)
+        {
+            if (!h.second || !h.second->validRaces)
+                continue;
+
+            if (std::find(doneHeadpartFormList.begin(), doneHeadpartFormList.end(), h.second->validRaces->formID) != doneHeadpartFormList.end())
+                continue;
+
+            auto* list = h.second->validRaces;
+            bool isRemoved = false;
+            if (list && (list->HasForm(RunTimeTeraElinRaceFormID) || list->HasForm(RunTimeTeraElinRaceVampFormID)))
+            {
+                list->ClearData();
+                AddHeadPartRacesForm(list, false);
+                isRemoved = true;
+            }
+
+            if (isRemoved)
+            {
+                doneHeadpartFormList.push_back(list->formID);
+                logger::trace("Removed elin races from {:x} formlist", list->formID);
+            }
+        }
+
+        return true;
+    }
 
     bool RaceCompatibility::ResolveCompatibleHairParts() 
     {
@@ -92,21 +162,35 @@ namespace Mus {
             return false;
         }
 
-        if (!CreateHeadPartFormList()) 
+        if (!CreateHeadPartFormList())
         {
             logger::error("Can't Create New HeadPart ValidRaces List");
             return false;
         }
 
-        AddHeadPartRacesForm();
+        AddHeadPartRacesForm(CompatibleHeadPartRaces, true);
 
+        logger::info("Try to compatible work on hair parts... {}", HPE.HeadPartFormMap.size());
         concurrency::parallel_for_each(HPE.HeadPartFormMap.begin(), HPE.HeadPartFormMap.end(), [&](auto& HP) { 
-            if (HP.second->validRaces)
-                HP.second->validRaces = CompatibleHeadPartRaces;
-
-            if (HP.second->validRaces->formID != CompatibleHeadPartRaces->formID)
-                logger::error("Can't edit headpart for race compatible : {:x}", HP.second->validRaces->formID);
+            if (HP.second)
+            {
+                if (HP.second->validRaces)
+                {
+                    HP.second->validRaces = CompatibleHeadPartRaces;
+                    logger::trace("Edit {}headpart for race compatible done : {} {} {:x}", (HP.second->IsExtraPart() ? "extra " : ""), GetModNameByID(HP.second->formID), HP.second->formEditorID.c_str(), HP.second->formID);
+                }
+            }
         });
+
+        logger::info("Try to set to non playable on head parts with incorrect validraces list... {}", HPE.NoneRacesHeadPartFormMap.size());
+        concurrency::parallel_for_each(HPE.NoneRacesHeadPartFormMap.begin(), HPE.NoneRacesHeadPartFormMap.end(), [&](auto& HP) {
+            if (HP.second)
+            {
+                if (SetNonePlayable(HP.second))
+                    logger::trace("Set {}headpart to none Playable done : {} {} {:x}", (HP.second->IsExtraPart() ? "extra " : ""), GetModNameByID(HP.second->formID), HP.second->formEditorID.c_str(), HP.second->formID);
+            }
+        });
+
         logger::trace("Try resolve Compatible issues in HeadParts finished");
         return true;
     }

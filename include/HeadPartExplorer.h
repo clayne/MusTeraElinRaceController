@@ -2,6 +2,11 @@
 
 namespace Mus {
     class HeadPartExplorer {
+        using HeadPartFlag = RE::BGSHeadPart::Flag;
+        using HeadPartType = RE::BGSHeadPart::HeadPartType;
+        using enumHeadPartFlag = SKSE::stl::enumeration<RE::BGSHeadPart::Flag, std::uint8_t>;
+        using enumHeadPartType = SKSE::stl::enumeration<RE::BGSHeadPart::HeadPartType, std::uint32_t>;
+
     public:
         [[nodiscard]] static HeadPartExplorer& GetSingleton() {
             static HeadPartExplorer instance;
@@ -9,28 +14,25 @@ namespace Mus {
         };
         
         concurrency::concurrent_unordered_map<RE::FormID, RE::BGSHeadPart*> HeadPartFormMap;
-        concurrency::concurrent_unordered_map<RE::FormID, RE::BGSHeadPart*> RemoveHeadPartFormMap;
+        concurrency::concurrent_unordered_map<RE::FormID, RE::BGSHeadPart*> OtherHeadPartFormMap;
+        concurrency::concurrent_unordered_map<RE::FormID, RE::BGSHeadPart*> NoneRacesHeadPartFormMap;
 
         bool InitFormList();
 
-    private:
-        using HeadPartFlag = RE::BGSHeadPart::Flag;
-        using HeadPartType = RE::BGSHeadPart::HeadPartType;
-        using enumHeadPartFlag = SKSE::stl::enumeration<RE::BGSHeadPart::Flag, std::uint8_t>;
-        using enumHeadPartType = SKSE::stl::enumeration<RE::BGSHeadPart::HeadPartType, std::uint32_t>;
-
         inline bool IsPlayerble(enumHeadPartFlag flags) { return flags.all(HeadPartFlag::kPlayable); };
         inline bool IsHairPart(enumHeadPartType type) { return (type == HeadPartType::kHair); };
-        inline bool IsNotForCustomRaceOnly(RE::BSTArray<RE::TESForm*> &validRaces) 
-        { 
+        inline bool IsNotForCustomRaceOnly(RE::BSTArray<RE::TESForm*>& validRaces)
+        {
             bool isVanilla = false;
-            for (int index = 0; index < validRaces.size(); index++) 
+            for (RE::BSTArrayBase::size_type index = 0; index < validRaces.size(); index++)
             {
                 if (validRaces[index] && validRaces[index]->formID < 0x05000000)
                     isVanilla = true;
             }
             return isVanilla;
         };
+    private:
+       
     };
 
 }
