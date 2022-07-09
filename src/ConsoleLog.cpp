@@ -6,7 +6,7 @@ namespace Mus {
 
         if (!Console) return;
 
-        std::string sfmt = UsePrefix;
+        std::string sfmt = ModPrefix;
         sfmt += fmt;
         fmt = sfmt.c_str();
 

@@ -36,26 +36,7 @@ namespace Mus {
 		animation_type MoodDisgust = animation_type::droop;
 	};
 
-	class AnimationController {
-		RE::FormID id;
-		std::string name;
-
-	public:
-		bool IsValidActor = true;
-		float IntervalTimeTick = 1.0f / 60.0f;
-
-		AnimationController(RE::Actor* actor, ControllerConfig config);
-		~AnimationController();
-		void update(RE::Actor* actor);
-
-	private:
-		void isCannotReadNode(bool isEnd);
-		std::vector<const char*> VNodeEntries;
-		int isCannotReadCount = -1;
-		bool isCountUpdated = false;
-
-		RE::Actor* elin;
-
+	struct ElinNodes {
 		RE::NiAVObject* EarL11;
 		RE::NiAVObject* EarR11;
 		RE::NiAVObject* EarL12;
@@ -80,19 +61,48 @@ namespace Mus {
 		RE::NiAVObject* TailBone3;
 
 		RE::NiAVObject* TailSpine;
+	};
+
+	class AnimationController{
+		RE::Actor* elin;
+		RE::FormID id;
+		std::string name;
+		ControllerConfig animConfig;
+
+	public:
+		bool IsValidActor = true;
+		float IntervalTimeTick = 1.0f / 60.0f;
+
+		AnimationController(RE::Actor* actor, ControllerConfig config);
+		~AnimationController();
+		void update(RE::Actor* actor);
+
+	private:
+		void isCannotReadNode(bool isEnd);
+		std::vector<const char*> VNodeEntries;
+		int isCannotReadCount = -1;
+		bool isCountUpdated = false;
+
+		ElinNodes en;
 
 		bool isValidNode = true;
 
 		void updateEarsAnimation();
-		void updateTailsAnimation();
+		void updateTailAnimation();
 
-		void resetAnimation();
+		void resetEarsAnimation();
+		void resetTailAnimation();
 
 		bool assignEarsNodes();
-		bool assignTailsNodes();
+		bool assignTailNodes();
 
-		RE::NiAVObject* GetVirtualNode(const RE::BSFixedString nodeName);
+		void updateEarsNodes();
+		void updateTailNodes();
 
-		ControllerConfig animConfig;
+		void updateNode(RE::NiAVObject* node);
+
+		RE::NiAVObject* GetVirtualNode(RE::BSFixedString nodeName);
+
+		float test = 0.0f;
 	};
 }

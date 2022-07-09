@@ -1,8 +1,8 @@
 #include "hook.h"
 
 namespace Mus {
-	constexpr std::uintptr_t GameLoopFunction_SE = 35565;
-	constexpr std::uintptr_t GameLoopFunction_AE = 36564;
+	constexpr std::uint64_t GameLoopFunction_SE = 35565;
+	constexpr std::uint64_t GameLoopFunction_AE = 36564;
 
 	EventDispatcherImpl<FrameEvent>  g_frameEventDispatcher;
 

@@ -130,6 +130,7 @@ namespace util {
 
 #include "Store.h"
 #include "Utility.hpp"
+#include "nifUtil.h"
 #include "ConsoleLog.h"
 #include "Config.h"
 

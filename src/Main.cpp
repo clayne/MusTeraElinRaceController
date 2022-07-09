@@ -124,8 +124,8 @@ namespace {
     {
         log::trace("Building hook...");
 
-        /*g_frameEventDispatcher.addListener(&ActorManager::instance());
-        hook();*/
+        g_frameEventDispatcher.addListener(&ActorManager::GetSingleton());
+        hook();
 
         EventHandler::GetSingleton().Register();
     }
@@ -133,7 +133,7 @@ namespace {
     void InitializeMessaging() 
     {
         if (!GetMessagingInterface()->RegisterListener([](MessagingInterface::Message* message) 
-            {
+        {
             switch (message->type) 
             {
                 // Skyrim lifecycle events.

@@ -22,12 +22,7 @@ namespace Mus {
 			!RE::PlayerCharacter::GetSingleton() || !RE::PlayerCharacter::GetSingleton()->loadedData || !RE::PlayerCharacter::GetSingleton()->loadedData->data3D)
 			return;
 
-		concurrency::parallel_invoke(
-			[&] {
-				ControllActors();
-		},  [&] {
-				TrackingActors();
-		});
+		ControllActors();
 	}
 
 	void ActorManager::ControllActors()
@@ -37,7 +32,7 @@ namespace Mus {
 			RE::Actor* actor = reinterpret_cast<RE::Actor*>(RE::TESForm::LookupByID(a.first));
 			if (actor)
 			{
-				if (a.first == RE::PlayerCharacter::GetSingleton()->formID)
+				if (a.first == 0x14)
 				{
 					ChangerPlayerState();
 				}
@@ -53,9 +48,9 @@ namespace Mus {
 		});
 	}
 
-	void ActorManager::TrackingActors()
+	void ActorManager::TrackingActors(RE::Actor* actor)
 	{
-		AIProcessManager* aiprocess = AIProcessManager::GetSingleton();
+		/*AIProcessManager* aiprocess = AIProcessManager::GetSingleton();
 		for (RE::BSTArrayBase::size_type index = 0; index < aiprocess->actorsHigh.size(); index++)
 		{
 			RE::NiPointer<RE::Actor> actorpointer = RE::Actor::LookupByHandle(aiprocess->actorsHigh[index]);
@@ -72,7 +67,22 @@ namespace Mus {
 
 			if (RegisterActor(actor, tm->second))
 				TrackingMap.erase(tm);
-		}
+		}*/
+
+		if (!actor)
+			return;
+		
+		logger::debug("Found and try tracking the actor {} {:x}...", actor->GetDisplayFullName(), actor->formID);
+
+		RE::TESNPC* npc = actor->GetActorBase();
+		auto list = TrackingMap.find(npc->formID);
+
+		if (list == TrackingMap.end())
+			return;
+
+		ControllerConfig config = list->second;
+
+		RegisterActor(actor, config);
 	}
 
 	bool ActorManager::RegisterActor(RE::Actor* actor, ControllerConfig config)
@@ -85,7 +95,7 @@ namespace Mus {
 
 		auto controller = AnimationController(actor, config);
 		ActorMap.insert(std::make_pair(actor->formID, controller));
-		logger::info("Registered the {} on Elin animation : {} {:x}", (actor->formID == 0x14) ? "Player" : "Actor", actor->GetDisplayFullName(), actor->formID);
+		logger::info("Registered the {} on Elin animation : {} {:x}", (actor->formID == 0x14) ? "Player " : "Actor ", actor->GetDisplayFullName(), actor->formID);
 
 		return true;
 	}
@@ -150,5 +160,15 @@ namespace Mus {
 
 		AnimationController& ac = am->second;
 		ac.IsValidActor = IsPlayerElin;
+	}
+
+	void ActorManager::InsertTrackingMap(RE::FormID baseid, std::string pluginname, ControllerConfig config)
+	{
+		RE::TESForm* obj = GetFormByID(baseid, pluginname);
+		if (!obj || obj->IsNot(RE::FormType::NPC))
+			return;
+
+		TrackingMap.emplace(baseid, config);
+		logger::info("insert {} {:x} on tracking list", pluginname, baseid);
 	}
 }

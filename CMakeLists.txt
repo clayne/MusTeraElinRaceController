@@ -24,6 +24,7 @@ set(headers
         include/dirent.h
         include/magic_enum.hpp
         include/Utility.hpp
+        include/nifUtil.h
         include/Config.h
         include/RaceCompatibility.h
         include/ConsoleLog.h
@@ -37,6 +38,8 @@ set(headers
 )
 
 set(sources
+        src/INiAVObject.cpp
+        src/nifUtil.cpp
         src/Config.cpp
         src/RaceCompatibility.cpp
         src/ConsoleLog.cpp

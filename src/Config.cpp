@@ -30,6 +30,8 @@ namespace Mus {
 
 
     bool MultipleConfig::LoadElinAnimationConfig() {
+        auto& am = ActorManager::GetSingleton();
+
         char RuntimeDirectory[4096];
         if (_getcwd(RuntimeDirectory, 4096) == NULL) 
         {
@@ -171,10 +173,11 @@ namespace Mus {
                         {
                             cc.MoodDisgust = magic_enum::enum_cast<animation_type>(variableValue).value();
                         }
-
                     }
                 }
             }
+
+            am.InsertTrackingMap(baseid, pluginname, cc);
         }
         return true;
     }

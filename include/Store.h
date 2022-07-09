@@ -1,8 +1,11 @@
 #pragma once
 
 namespace Mus {
-	extern std::string ModPrefix;
-	extern std::string UsePrefix;
+	const RE::NiPoint3 emptyPoint = RE::NiPoint3(0, 0, 0);
+	const RE::NiMatrix3 emptyRotate = RE::NiMatrix3(emptyPoint);
+
+	const std::string ModPrefix = "TeraElinRace Controller : ";
+	const std::string NodePrefix = "Mus ";
 
 	extern std::atomic<bool> IsRaceSexMenu;
 	extern std::atomic<bool> IsMainMenu;
@@ -10,30 +13,30 @@ namespace Mus {
 	extern std::atomic<bool> IsPlayerElin;
 
 	namespace Nodes {
-		extern RE::BSFixedString EarL11;
-		extern RE::BSFixedString EarR11;
-		extern RE::BSFixedString EarL12;
-		extern RE::BSFixedString EarR12;
-		extern RE::BSFixedString EarL13;
-		extern RE::BSFixedString EarR13;
+		extern const RE::BSFixedString& EarL11;
+		extern const RE::BSFixedString& EarR11;
+		extern const RE::BSFixedString& EarL12;
+		extern const RE::BSFixedString& EarR12;
+		extern const RE::BSFixedString& EarL13;
+		extern const RE::BSFixedString& EarR13;
 
-		extern RE::BSFixedString EarL21;
-		extern RE::BSFixedString EarR21;
-		extern RE::BSFixedString EarL22;
-		extern RE::BSFixedString EarR22;
-		extern RE::BSFixedString EarL23;
-		extern RE::BSFixedString EarR23;
+		extern const RE::BSFixedString& EarL21;
+		extern const RE::BSFixedString& EarR21;
+		extern const RE::BSFixedString& EarL22;
+		extern const RE::BSFixedString& EarR22;
+		extern const RE::BSFixedString& EarL23;
+		extern const RE::BSFixedString& EarR23;
 
-		extern RE::BSFixedString EarL31;
-		extern RE::BSFixedString EarR31;
-		extern RE::BSFixedString EarL32;
-		extern RE::BSFixedString EarR32;
+		extern const RE::BSFixedString& EarL31;
+		extern const RE::BSFixedString& EarR31;
+		extern const RE::BSFixedString& EarL32;
+		extern const RE::BSFixedString& EarR32;
 
 
-		extern RE::BSFixedString TailBone1;
-		extern RE::BSFixedString TailBone2;
-		extern RE::BSFixedString TailBone3;
+		extern const RE::BSFixedString& TailBone1;
+		extern const RE::BSFixedString& TailBone2;
+		extern const RE::BSFixedString& TailBone3;
 
-		extern RE::BSFixedString TailSpine;
+		extern const RE::BSFixedString& TailSpine;
 	}
 }

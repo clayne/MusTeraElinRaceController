@@ -59,13 +59,38 @@ namespace Mus {
 	{
 		logger::debug("Detected Load Game Event");
 		IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
-		if (!ActorManager::instance().RegisterPlayer())
+		if (!ActorManager::GetSingleton().RegisterPlayer())
 		{
 			logger::error("Failed register player on ElinAnimation");
-			return EventResult::kContinue;
 		}
-		ActorManager::instance().ChangerPlayerState();
+		else
+		{
+			ActorManager::GetSingleton().ChangerPlayerState();
+		}
 		RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
+		return EventResult::kContinue;
+	}
+
+	EventResult EventHandler::ProcessEvent(const RE::TESObjectLoadedEvent* evn, RE::BSTEventSource<RE::TESObjectLoadedEvent>*)
+	{
+		if (!evn)
+			return EventResult::kContinue;	
+		
+		if (!evn->loaded)
+			return EventResult::kContinue;
+			
+		RE::TESForm* obj = RE::TESForm::LookupByID(evn->formID);
+		if (!obj || obj->IsNot(RE::FormType::ActorCharacter))
+			return EventResult::kContinue;
+			
+		RE::Actor* actor = reinterpret_cast<RE::Actor*>(obj);
+
+		if (!actor)
+			return EventResult::kContinue;
+		
+		static auto& am = ActorManager::GetSingleton();
+		am.TrackingActors(actor);
+
 		return EventResult::kContinue;
 	}
 }
