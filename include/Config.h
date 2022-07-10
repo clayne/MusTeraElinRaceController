@@ -291,8 +291,11 @@ namespace Mus {
         [[nodiscard]] inline bool GetEnableNPCs() const noexcept {
             return EnableNPCs;
         }
-        [[nodiscard]] inline  std::uint8_t GetAnimationSpeed() const noexcept {
-            return AnimationSpeed;
+        [[nodiscard]] inline  std::uint8_t GetAnimationEarsSpeed() const noexcept {
+            return AnimationEarsSpeed;
+        }
+        [[nodiscard]] inline  std::uint8_t GetAnimationTailSpeed() const noexcept {
+            return AnimationTailSpeed;
         }
         [[nodiscard]] inline  bool GetReversed() const noexcept {
             return Reversed;
@@ -308,7 +311,8 @@ namespace Mus {
             ar <=> articuno::kv(DisableOnRaceSexMenu, "DisableOnRaceSexMenu");
             ar <=> articuno::kv(EnablePlayer, "EnablePlayer");
             ar <=> articuno::kv(EnableNPCs, "EnableNPCs");
-            ar <=> articuno::kv(AnimationSpeed, "AnimationSpeed");
+            ar <=> articuno::kv(AnimationEarsSpeed, "AnimationEarsSpeed");
+            ar <=> articuno::kv(AnimationTailSpeed, "AnimationTailSpeed");
             ar <=> articuno::kv(Reversed, "Reversed");
         }
 
@@ -317,7 +321,8 @@ namespace Mus {
         bool DisableOnRaceSexMenu = true;
         bool EnablePlayer = true;
         bool EnableNPCs = true;
-        std::uint8_t AnimationSpeed = 3;
+        std::uint8_t AnimationEarsSpeed = 3;
+        std::uint8_t AnimationTailSpeed = 3;
         bool Reversed = false;
 
         DirectControl _directcontrol;
@@ -382,7 +387,66 @@ namespace Mus {
         float GetConfigSettingsFloatValue(std::string line, std::string& variable);
         bool GetConfigSettingsBoolValue(std::string line, std::string& variable);
         std::string GetConfigSettingsStringValue(std::string line, std::string& variable);
-        std::uint32_t GetConfigSettingsHexValue(std::string line, std::string& variable);
-        std::uint32_t GetFormIdFromString(std::string str);
+        RE::FormID GetConfigSettingsFormIDValue(std::string line, std::string& variable);
+        std::vector<RE::FormID> ConfigLineSplitterFormID(std::string& line);
+
+        // trim from start (in place)
+        inline void ltrim(std::string& s)
+        {
+            s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                [](int c) {return !std::isspace(c); }));
+        }
+
+        // trim from end (in place)
+        inline void rtrim(std::string& s)
+        {
+            s.erase(std::find_if(s.rbegin(), s.rend(),
+                [](int c) {return !std::isspace(c); }).base(), s.end());
+        }
+
+        // trim from both ends (in place)
+        inline void trim(std::string& s)
+        {
+            ltrim(s);
+            rtrim(s);
+        }
+
+        inline std::string trim_copy(std::string s)
+        {
+            trim(s);
+            return s;
+        }
+
+        inline std::vector<std::string> split(const std::string& s, char delimiter)
+        {
+            std::string str = trim_copy(s);
+
+            std::vector<std::string> tokens;
+            if (!str.empty())
+            {
+                std::string token;
+                std::istringstream tokenStream(str);
+                while (std::getline(tokenStream, token, delimiter))
+                {
+                    trim(token);
+                    tokens.emplace_back(token);
+                }
+            }
+            return tokens;
+        }
+
+        inline void skipComments(std::string& str)
+        {
+            auto pos = str.find("#");
+            if (pos != std::string::npos)
+            {
+                str.erase(pos);
+            }
+        }
+
+        inline RE::FormID getHex(std::string hexstr)
+        {
+            return (RE::FormID)strtoul(hexstr.c_str(), 0, 16);
+        }
     };
 }

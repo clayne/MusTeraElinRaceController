@@ -1,65 +1,6 @@
 #pragma once
 
 namespace Mus {
-    // trim from start (in place)
-    inline void ltrim(std::string& s)
-    {
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-            [](int c) {return !std::isspace(c); }));
-    }
-
-    // trim from end (in place)
-    inline void rtrim(std::string& s)
-    {
-        s.erase(std::find_if(s.rbegin(), s.rend(),
-            [](int c) {return !std::isspace(c); }).base(), s.end());
-    }
-
-    // trim from both ends (in place)
-    inline void trim(std::string& s)
-    {
-        ltrim(s);
-        rtrim(s);
-    }
-
-    inline std::string trim_copy(std::string s)
-    {
-        trim(s);
-        return s;
-    }
-
-    static inline std::vector<std::string> split(const std::string& s, char delimiter)
-    {
-        std::string str = trim_copy(s);
-
-        std::vector<std::string> tokens;
-        if (!str.empty())
-        {
-            std::string token;
-            std::istringstream tokenStream(str);
-            while (std::getline(tokenStream, token, delimiter))
-            {
-                trim(token);
-                tokens.emplace_back(token);
-            }
-        }
-        return tokens;
-    }
-
-    inline void skipComments(std::string& str)
-    {
-        auto pos = str.find("#");
-        if (pos != std::string::npos)
-        {
-            str.erase(pos);
-        }
-    }
-
-    inline std::uint32_t getHex(std::string hexstr)
-    {
-        return (std::uint32_t)strtoul(hexstr.c_str(), 0, 16);
-    }
-
     inline RE::TESForm* GetFormByID(RE::FormID id, std::string_view modname) 
     {
         RE::TESDataHandler* DataHandler = RE::TESDataHandler::GetSingleton();

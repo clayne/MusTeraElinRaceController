@@ -18,7 +18,8 @@ namespace Mus {
 	struct ControllerConfig {
 		float FrequencyMax = 7.5;
 		float FrequencyMin = 2.5;
-		std::uint8_t AnimationSpeed = 3;
+		std::uint8_t AnimationEarsSpeed = 3;
+		std::uint8_t AnimationTailSpeed = 3;
 		bool Reversed = false;
 		animation_type DialogueAnger = animation_type::attention;
 		animation_type DialogueFear = animation_type::droop;
@@ -102,7 +103,5 @@ namespace Mus {
 		void updateNode(RE::NiAVObject* node);
 
 		RE::NiAVObject* GetVirtualNode(RE::BSFixedString nodeName);
-
-		float test = 0.0f;
 	};
 }

@@ -6,8 +6,6 @@ namespace Mus {
 		, id(actor->formID)
 		, name(actor->GetDisplayFullName())
 		, animConfig(config) {
-		RE::bhkCharacterController* controller = elin->currentProcess->middleHigh->charController.get();
-		test = controller->center;
 	}
 
 	AnimationController::~AnimationController() {

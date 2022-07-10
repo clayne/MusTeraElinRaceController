@@ -76,7 +76,7 @@ namespace Mus {
 		void ChangerPlayerState();
 
 		void TrackingActors(RE::Actor* actor);
-		void InsertTrackingMap(RE::FormID baseid, std::string pluginname, ControllerConfig config);
+		void InsertTrackingMap(std::vector<RE::FormID> baseid_list, std::string pluginname, ControllerConfig config);
 
 	protected:
 		void onEvent(const FrameEvent& e) override;
@@ -95,6 +95,6 @@ namespace Mus {
 
 		void ControllActors();
 
-		std::unordered_map<RE::FormID, ControllerConfig> TrackingMap;
+		concurrency::concurrent_unordered_map<RE::FormID, ControllerConfig> TrackingMap;
 	};
 }

@@ -43,142 +43,149 @@ namespace Mus {
         configPath += "\\Data\\SKSE\\Plugins\\MusTeraElinRaceController\\";
 
         auto configList = get_all_files_names_within_folder(configPath.c_str());
-        for (std::size_t i = 0; i < configList.size(); i++)
+        concurrency::parallel_for(std::size_t(0), configList.size(), [&](std::size_t i)
         {
             std::string filename = configList.at(i);
 
-            if (filename == "." || filename == "..")
-                continue;
-
-            if (!stringEndsWith(filename, ".ini"))
-                continue;
-
-            logger::info("File found: {}", filename);
-
-            std::string filepath = configPath;
-            filepath.append(filename);
-            std::ifstream file(filepath);
-
-            if (!file.is_open())
+            if (filename != "." && filename != "..")
             {
-                transform(filepath.begin(), filepath.end(), filepath.begin(), ::tolower);
-                file.open(filepath);
-            }
 
-            if (!file.is_open())
-                continue;
-
-            std::string pluginname;
-            uint32_t baseid = 0;
-            ControllerConfig cc;
-            cc.FrequencyMax = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMax();
-            cc.FrequencyMin = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMin();
-            cc.Reversed = false;
-            cc.AnimationSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationSpeed();
-
-            std::string line;
-            std::string currentSetting;
-            while (std::getline(file, line))
-            {
-                //trim(line);
-                skipComments(line);
-                trim(line);
-                if (line.length() > 0)
+                if (stringEndsWith(filename, ".ini"))
                 {
-                    if (line.substr(0, 1) == "[")
+
+                    logger::info("File found: {}", filename);
+
+                    std::string filepath = configPath;
+                    filepath.append(filename);
+                    std::ifstream file(filepath);
+
+                    if (!file.is_open())
                     {
-                        currentSetting = line;
+                        transform(filepath.begin(), filepath.end(), filepath.begin(), ::tolower);
+                        file.open(filepath);
                     }
-                    else
+
+                    if (file.is_open())
                     {
-                        std::string variableName;
-                        std::string variableValue = GetConfigSettingsStringValue(line, variableName);
-                        if (variableName == "PluginName")
+
+                        std::string pluginname;
+                        std::vector<RE::FormID> baseid_list;
+                        ControllerConfig cc;
+                        cc.FrequencyMax = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMax();
+                        cc.FrequencyMin = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMin();
+                        cc.Reversed = false;
+                        cc.AnimationEarsSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationEarsSpeed();
+                        cc.AnimationTailSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationTailSpeed();
+
+                        std::string line;
+                        std::string currentSetting;
+                        while (std::getline(file, line))
                         {
-                            pluginname = variableValue;
+                            //trim(line);
+                            skipComments(line);
+                            trim(line);
+                            if (line.length() > 0)
+                            {
+                                if (line.substr(0, 1) == "[")
+                                {
+                                    currentSetting = line;
+                                }
+                                else
+                                {
+                                    std::string variableName;
+                                    std::string variableValue = GetConfigSettingsStringValue(line, variableName);
+                                    if (variableName == "PluginName")
+                                    {
+                                        pluginname = variableValue;
+                                    }
+                                    else if (variableName == "ActorBaseID")
+                                    {
+                                        baseid_list = ConfigLineSplitterFormID(variableValue);
+                                    }
+                                    else if (variableName == "FrequencyMax")
+                                    {
+                                        cc.FrequencyMax = GetConfigSettingsFloatValue(line, variableName);
+                                    }
+                                    else if (variableName == "FrequencyMin")
+                                    {
+                                        cc.FrequencyMin = GetConfigSettingsFloatValue(line, variableName);
+                                    }
+                                    else if (variableName == "Reversed")
+                                    {
+                                        cc.Reversed = GetConfigSettingsBoolValue(line, variableName);
+                                    }
+                                    else if (variableName == "AnimationEarsSpeed")
+                                    {
+                                        cc.AnimationEarsSpeed = GetConfigSettingsValue(line, variableName);
+                                    }
+                                    else if (variableName == "AnimationTailSpeed")
+                                    {
+                                        cc.AnimationTailSpeed = GetConfigSettingsValue(line, variableName);
+                                    }
+                                    else if (variableName == "DialogueAnger")
+                                    {
+                                        cc.DialogueAnger = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "DialogueFear")
+                                    {
+                                        cc.DialogueFear = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "DialogueHappy")
+                                    {
+                                        cc.DialogueHappy = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "DialogueSad")
+                                    {
+                                        cc.DialogueSad = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "DialogueSurprise")
+                                    {
+                                        cc.DialogueSurprise = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "DialoguePuzzled")
+                                    {
+                                        cc.DialoguePuzzled = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "DialogueDisgust")
+                                    {
+                                        cc.DialogueDisgust = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "MoodAnger")
+                                    {
+                                        cc.MoodAnger = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "MoodFear")
+                                    {
+                                        cc.MoodFear = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "MoodHappy")
+                                    {
+                                        cc.MoodHappy = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "MoodSad")
+                                    {
+                                        cc.MoodSad = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "MoodSurprise")
+                                    {
+                                        cc.MoodSurprise = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "MoodPuzzled")
+                                    {
+                                        cc.MoodPuzzled = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                    else if (variableName == "MoodDisgust")
+                                    {
+                                        cc.MoodDisgust = magic_enum::enum_cast<animation_type>(variableValue).value();
+                                    }
+                                }
+                            }
                         }
-                        else if (variableName == "ActorBaseID")
-                        {
-                            baseid = GetConfigSettingsHexValue(line, variableName);
-                        }
-                        else if (variableName == "FrequencyMax")
-                        {
-                            cc.FrequencyMax = GetConfigSettingsFloatValue(line, variableName);
-                        }
-                        else if (variableName == "FrequencyMin")
-                        {
-                            cc.FrequencyMin = GetConfigSettingsFloatValue(line, variableName);
-                        }
-                        else if (variableName == "Reversed")
-                        {
-                            cc.Reversed = GetConfigSettingsBoolValue(line, variableName);
-                        }
-                        else if (variableName == "AnimationSpeed")
-                        {
-                            cc.AnimationSpeed = GetConfigSettingsValue(line, variableName);;
-                        }
-                        else if (variableName == "DialogueAnger")
-                        {
-                            cc.DialogueAnger = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "DialogueFear")
-                        {
-                            cc.DialogueFear = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "DialogueHappy")
-                        {
-                            cc.DialogueHappy = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "DialogueSad")
-                        {
-                            cc.DialogueSad = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "DialogueSurprise")
-                        {
-                            cc.DialogueSurprise = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "DialoguePuzzled")
-                        {
-                            cc.DialoguePuzzled = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "DialogueDisgust")
-                        {
-                            cc.DialogueDisgust = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "MoodAnger")
-                        {
-                            cc.MoodAnger = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "MoodFear")
-                        {
-                            cc.MoodFear = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "MoodHappy")
-                        {
-                            cc.MoodHappy = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "MoodSad")
-                        {
-                            cc.MoodSad = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "MoodSurprise")
-                        {
-                            cc.MoodSurprise = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "MoodPuzzled")
-                        {
-                            cc.MoodPuzzled = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
-                        else if (variableName == "MoodDisgust")
-                        {
-                            cc.MoodDisgust = magic_enum::enum_cast<animation_type>(variableValue).value();
-                        }
+                        am.InsertTrackingMap(baseid_list, pluginname, cc);
                     }
                 }
             }
-
-            am.InsertTrackingMap(baseid, pluginname, cc);
-        }
+        });
         return true;
     }
 
@@ -250,9 +257,9 @@ namespace Mus {
         return value;
     }
 
-    std::uint32_t MultipleConfig::GetConfigSettingsHexValue(std::string line, std::string& variable)
+    RE::FormID MultipleConfig::GetConfigSettingsFormIDValue(std::string line, std::string& variable)
     {
-        std::uint32_t value;
+       RE::FormID value;
         std::vector<std::string> splittedLine = split(line, '=');
         variable = "";
         if (splittedLine.size() > 1)
@@ -262,14 +269,21 @@ namespace Mus {
 
             std::string valuestr = splittedLine[1];
             trim(valuestr);
-            value = GetFormIdFromString(valuestr);
+            value = getHex(valuestr.c_str());
         }
         return value;
     }
 
-    std::uint32_t MultipleConfig::GetFormIdFromString(std::string str)
+    std::vector<RE::FormID> MultipleConfig::ConfigLineSplitterFormID(std::string& line)
     {
-        return getHex(str.c_str());
+        std::vector<std::string> SplittedFormID = split(line, '|');
+        std::vector<RE::FormID> value;
+        for (size_t index = 0; index < SplittedFormID.size(); index++)
+        {
+            trim(SplittedFormID[index]);
+            value.emplace_back(getHex(SplittedFormID[index].c_str()));
+        }
+        return value;
     }
 }
 

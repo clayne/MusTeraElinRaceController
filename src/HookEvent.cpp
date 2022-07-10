@@ -9,8 +9,9 @@ namespace Mus {
 		}
 
 		if (const auto EventHolder = RE::ScriptEventSourceHolder::GetSingleton()) {
-			logger::info("Sinking game load events...");
+			logger::info("Sinking loaded events...");
 			EventHolder->AddEventSink<RE::TESLoadGameEvent>(this);
+			EventHolder->AddEventSink<RE::TESObjectLoadedEvent>(this);
 		}
 
 	}
@@ -32,12 +33,12 @@ namespace Mus {
 	{
 		if (name == "Main Menu")
 		{
-			logger::debug("Detected Main Menu");
+			logger::trace("Detected Main Menu");
 			IsMainMenu.store(true);
 		}
 		else if (name == "RaceSex Menu")
 		{
-			logger::debug("Detected RaceSex Menu");
+			logger::trace("Detected RaceSex Menu");
 			IsRaceSexMenu.store(true);
 		}
 	};
@@ -57,7 +58,7 @@ namespace Mus {
 
 	EventResult EventHandler::ProcessEvent(const RE::TESLoadGameEvent* evn, RE::BSTEventSource<RE::TESLoadGameEvent>*) 
 	{
-		logger::debug("Detected Load Game Event");
+		logger::trace("Detected Load Game Event");
 		IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
 		if (!ActorManager::GetSingleton().RegisterPlayer())
 		{
@@ -82,12 +83,12 @@ namespace Mus {
 		RE::TESForm* obj = RE::TESForm::LookupByID(evn->formID);
 		if (!obj || obj->IsNot(RE::FormType::ActorCharacter))
 			return EventResult::kContinue;
-			
+
 		RE::Actor* actor = reinterpret_cast<RE::Actor*>(obj);
 
 		if (!actor)
 			return EventResult::kContinue;
-		
+
 		static auto& am = ActorManager::GetSingleton();
 		am.TrackingActors(actor);
 

@@ -50,29 +50,10 @@ namespace Mus {
 
 	void ActorManager::TrackingActors(RE::Actor* actor)
 	{
-		/*AIProcessManager* aiprocess = AIProcessManager::GetSingleton();
-		for (RE::BSTArrayBase::size_type index = 0; index < aiprocess->actorsHigh.size(); index++)
-		{
-			RE::NiPointer<RE::Actor> actorpointer = RE::Actor::LookupByHandle(aiprocess->actorsHigh[index]);
-			if (!actorpointer)
-				continue;
-
-			RE::Actor* actor = actorpointer.get();
-			if (!actor || !actor->loadedData || !actor->loadedData->data3D)
-				continue;
-
-			auto tm = TrackingMap.find(GetActorBaseFormID(actor));
-			if (tm == TrackingMap.end())
-				continue;
-
-			if (RegisterActor(actor, tm->second))
-				TrackingMap.erase(tm);
-		}*/
-
 		if (!actor)
 			return;
 		
-		logger::debug("Found and try tracking the actor {} {:x}...", actor->GetDisplayFullName(), actor->formID);
+		logger::debug("Verify configure the actor {} {:x}...", actor->GetDisplayFullName(), actor->formID);
 
 		RE::TESNPC* npc = actor->GetActorBase();
 		auto list = TrackingMap.find(npc->formID);
@@ -111,7 +92,8 @@ namespace Mus {
 
 		ControllerConfig config;
 
-		config.AnimationSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationSpeed();
+		config.AnimationEarsSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationEarsSpeed();
+		config.AnimationTailSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationTailSpeed();
 		config.FrequencyMax = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMax();
 		config.FrequencyMin = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMin();
 		config.Reversed = Config::GetSingleton().GetSetting().GetAnimation().GetReversed();
@@ -162,13 +144,17 @@ namespace Mus {
 		ac.IsValidActor = IsPlayerElin;
 	}
 
-	void ActorManager::InsertTrackingMap(RE::FormID baseid, std::string pluginname, ControllerConfig config)
+	void ActorManager::InsertTrackingMap(std::vector<RE::FormID> baseid_list, std::string pluginname, ControllerConfig config)
 	{
-		RE::TESForm* obj = GetFormByID(baseid, pluginname);
-		if (!obj || obj->IsNot(RE::FormType::NPC))
-			return;
+		for (size_t index = 0; index < baseid_list.size(); index++)
+		{
+			logger::debug("Verify the baseid is valid NPC : {} {:x}", pluginname, baseid_list.at(index));
+			RE::TESForm* obj = GetFormByID(baseid_list.at(index), pluginname);
+			if (!obj || obj->IsNot(RE::FormType::NPC))
+				continue;
 
-		TrackingMap.emplace(baseid, config);
-		logger::info("insert {} {:x} on tracking list", pluginname, baseid);
+			TrackingMap.insert(std::make_pair(baseid_list.at(index), config));
+			logger::info("insert {} {:x} on tracking list", pluginname, baseid_list.at(index));
+		}
 	}
 }

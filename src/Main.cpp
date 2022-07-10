@@ -130,6 +130,14 @@ namespace {
         EventHandler::GetSingleton().Register();
     }
 
+    void kDataloadedFunction()
+    {
+        IsValidTeraElinRace = RaceCompatibility::GetSingleton().IsTeraElinRaceInstalled();
+        RaceCompatibility::GetSingleton().LoadRaceCompatibility();
+        MultipleConfig mc;
+        mc.LoadElinAnimationConfig();
+    }
+
     void InitializeMessaging() 
     {
         if (!GetMessagingInterface()->RegisterListener([](MessagingInterface::Message* message) 
@@ -144,10 +152,7 @@ namespace {
                     break;
                 case MessagingInterface::kDataLoaded: // All ESM/ESL/ESP plugins have loaded, main menu is now active.
                     // It is now safe to access form data.
-                    IsValidTeraElinRace = RaceCompatibility::GetSingleton().IsTeraElinRaceInstalled();
-                    RaceCompatibility::GetSingleton().LoadRaceCompatibility();
-                    MultipleConfig mc;
-                    mc.LoadElinAnimationConfig();
+                    kDataloadedFunction();
                     break;
 
                 // Skyrim game events.
