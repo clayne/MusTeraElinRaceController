@@ -85,7 +85,7 @@ namespace Mus {
 	{
 		auto* Player = RE::PlayerCharacter::GetSingleton();
 
-		if (!Player || !Player->loadedData || !Player->loadedData->data3D || !Player->loadedData->data3D.get() || IsPlayerElin.load())
+		if (!Player || !Player->loadedData || !Player->loadedData->data3D || !Player->loadedData->data3D.get() || !IsPlayerElin.load())
 			return false;
 
 		logger::info("Try to register the Player on Elin animation : {} {:x}", Player->GetDisplayFullName(), Player->formID);

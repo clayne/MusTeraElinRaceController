@@ -46,15 +46,20 @@ namespace Mus {
         [[nodiscard]] inline bool GetBeforeSaveCompatible() const noexcept {
             return BeforeSaveCompatible;
         }
+        [[nodiscard]] inline  std::string GetExceptionHeadParts() const noexcept {
+            return ExceptionHeadParts;
+        }
 
     private:
         articuno_serde(ar) {
             ar <=> articuno::kv(RaceController, "RaceController");
             ar <=> articuno::kv(BeforeSaveCompatible, "BeforeSaveCompatible");
+            ar <=> articuno::kv(ExceptionHeadParts, "ExceptionHeadParts");
         }
 
         bool RaceController = true;
         bool BeforeSaveCompatible = false;
+        std::string ExceptionHeadParts;
 
         friend class articuno::access;
     };
@@ -382,42 +387,34 @@ namespace Mus {
     public:
         bool LoadElinAnimationConfig();
 
-    private:
-        int GetConfigSettingsValue(std::string line, std::string& variable);
-        float GetConfigSettingsFloatValue(std::string line, std::string& variable);
-        bool GetConfigSettingsBoolValue(std::string line, std::string& variable);
-        std::string GetConfigSettingsStringValue(std::string line, std::string& variable);
-        RE::FormID GetConfigSettingsFormIDValue(std::string line, std::string& variable);
-        std::vector<RE::FormID> ConfigLineSplitterFormID(std::string& line);
-
         // trim from start (in place)
-        inline void ltrim(std::string& s)
+        static inline void ltrim(std::string& s)
         {
             s.erase(s.begin(), std::find_if(s.begin(), s.end(),
                 [](int c) {return !std::isspace(c); }));
         }
 
         // trim from end (in place)
-        inline void rtrim(std::string& s)
+        static inline void rtrim(std::string& s)
         {
             s.erase(std::find_if(s.rbegin(), s.rend(),
                 [](int c) {return !std::isspace(c); }).base(), s.end());
         }
 
         // trim from both ends (in place)
-        inline void trim(std::string& s)
+        static inline void trim(std::string& s)
         {
             ltrim(s);
             rtrim(s);
         }
 
-        inline std::string trim_copy(std::string s)
+        static inline std::string trim_copy(std::string s)
         {
             trim(s);
             return s;
         }
 
-        inline std::vector<std::string> split(const std::string& s, char delimiter)
+        static inline std::vector<std::string> split(const std::string& s, char delimiter)
         {
             std::string str = trim_copy(s);
 
@@ -435,7 +432,7 @@ namespace Mus {
             return tokens;
         }
 
-        inline void skipComments(std::string& str)
+        static inline void skipComments(std::string& str)
         {
             auto pos = str.find("#");
             if (pos != std::string::npos)
@@ -444,9 +441,17 @@ namespace Mus {
             }
         }
 
-        inline RE::FormID getHex(std::string hexstr)
+        static inline RE::FormID getHex(std::string hexstr)
         {
             return (RE::FormID)strtoul(hexstr.c_str(), 0, 16);
         }
+
+    private:
+        int GetConfigSettingsValue(std::string line, std::string& variable);
+        float GetConfigSettingsFloatValue(std::string line, std::string& variable);
+        bool GetConfigSettingsBoolValue(std::string line, std::string& variable);
+        std::string GetConfigSettingsStringValue(std::string line, std::string& variable);
+        RE::FormID GetConfigSettingsFormIDValue(std::string line, std::string& variable);
+        std::vector<RE::FormID> ConfigLineSplitterFormID(std::string& line);
     };
 }

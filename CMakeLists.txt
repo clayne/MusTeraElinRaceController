@@ -6,7 +6,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         MusTeraElinRaceController
-        VERSION 1.0.0
+        VERSION 1.0.1
         DESCRIPTION "TeraElinRace Feature Controller by Acro."
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
@@ -29,6 +29,8 @@ set(headers
         include/RaceCompatibility.h
         include/ConsoleLog.h
         include/PapyrusScripts.h
+        include/PlayerGenderDetector.h
+        include/PlayerChangeElinDetector.h
         include/HeadPartExplorer.h
         include/Hook.h
         include/HookEvent.h
@@ -44,6 +46,8 @@ set(sources
         src/RaceCompatibility.cpp
         src/ConsoleLog.cpp
         src/PapyrusScripts.cpp
+        src/PlayerGenderDetector.cpp
+        src/PlayerChangeElinDetector.cpp
         src/HeadPartExplorer.cpp
         src/Hook.cpp
         src/HookEvent.cpp
@@ -63,12 +67,29 @@ source_group(
 ########################################################################################################################
 ## Configure target DLL
 ########################################################################################################################
-find_package(CommonLibSSE CONFIG REQUIRED)
+find_package(CommonLibSSE REQUIRED)
 find_package(ryml CONFIG REQUIRED)
 find_path(ARTICUNO_INCLUDE_DIRS "articuno/articuno.h")
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources})
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
+
+target_compile_features(
+    ${PROJECT_NAME}
+    PUBLIC
+        cxx_std_23
+)
+
+target_compile_definitions(
+    ${PROJECT_NAME}
+    PUBLIC
+        WINVER=0x0601	# windows 7, minimum supported version by skyrim special edition
+        _WIN32_WINNT=0x0601
+        "$<$<BOOL:${SKSE_SUPPORT_XBYAK}>:SKSE_SUPPORT_XBYAK=1>"
+        "$<$<BOOL:${ENABLE_SKYRIM_SE}>:ENABLE_SKYRIM_SE=1>"
+        "$<$<BOOL:${ENABLE_SKYRIM_AE}>:ENABLE_SKYRIM_AE=1>"
+        "$<$<BOOL:${ENABLE_SKYRIM_VR}>:ENABLE_SKYRIM_VR=1>"
+)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE

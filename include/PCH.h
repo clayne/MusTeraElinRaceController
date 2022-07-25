@@ -137,8 +137,10 @@ namespace util {
 #include "Hook.h"
 #include "HookEvent.h"
 
+#include "PlayerGenderDetector.h"
 #include "HeadPartExplorer.h"
 #include "RaceCompatibility.h"
+#include "PlayerChangeElinDetector.h"
 
 #include "AnimationController.h"
 #include "ActorManager.h"

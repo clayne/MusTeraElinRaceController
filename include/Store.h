@@ -11,6 +11,7 @@ namespace Mus {
 	extern std::atomic<bool> IsMainMenu;
 	extern bool IsValidTeraElinRace;
 	extern std::atomic<bool> IsPlayerElin;
+	extern std::atomic<bool> IsScanningScriptRace;
 
 	namespace Nodes {
 		extern const RE::BSFixedString& EarL11;

@@ -3,6 +3,9 @@
 namespace Mus {
 	constexpr std::uint64_t GameLoopFunction_SE = 35565;
 	constexpr std::uint64_t GameLoopFunction_AE = 36564;
+	constexpr std::uint64_t GameLoopFunction_VR = 0x005BAB10;
+
+	constexpr REL::VariantID GameLoopFunction(35565, 36564, 0x005BAB10);
 
 	EventDispatcherImpl<FrameEvent>  g_frameEventDispatcher;
 
@@ -10,7 +13,7 @@ namespace Mus {
 	{
 		MEMBER_FN_PREFIX(UnkEngine);
 
-		DEFINE_MEMBER_FN_HOOK(onFrame, void, GameLoopFunction_SE, GameLoopFunction_AE);
+		DEFINE_MEMBER_FN_HOOK(onFrame, void, GameLoopFunction.address());
 
 		void onFrame();
 

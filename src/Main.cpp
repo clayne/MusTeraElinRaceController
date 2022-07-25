@@ -125,6 +125,8 @@ namespace {
         log::trace("Building hook...");
 
         g_frameEventDispatcher.addListener(&ActorManager::GetSingleton());
+        g_frameEventDispatcher.addListener(&PlayerGenderDetector::GetSingleton());
+        g_frameEventDispatcher.addListener(&PlayerChangeElinDetector::GetSingleton());
         hook();
 
         EventHandler::GetSingleton().Register();
@@ -133,7 +135,8 @@ namespace {
     void kDataloadedFunction()
     {
         IsValidTeraElinRace = RaceCompatibility::GetSingleton().IsTeraElinRaceInstalled();
-        RaceCompatibility::GetSingleton().LoadRaceCompatibility();
+        RaceCompatibility::GetSingleton().GetRuntimeData();
+        RaceCompatibility::GetSingleton().InitFormList();
         MultipleConfig mc;
         mc.LoadElinAnimationConfig();
     }

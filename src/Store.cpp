@@ -7,6 +7,8 @@ namespace Mus {
 
 	std::atomic<bool> IsPlayerElin = false;
 
+	std::atomic<bool> IsScanningScriptRace = true;
+
 	namespace Nodes {
 		const RE::BSFixedString& EarL11("HDT EarL1.001");
 		const RE::BSFixedString& EarR11("HDT EarR1.001");

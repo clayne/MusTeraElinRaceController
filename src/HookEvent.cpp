@@ -59,7 +59,9 @@ namespace Mus {
 	EventResult EventHandler::ProcessEvent(const RE::TESLoadGameEvent* evn, RE::BSTEventSource<RE::TESLoadGameEvent>*) 
 	{
 		logger::trace("Detected Load Game Event");
-		IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
+		RaceCompatibility::GetSingleton().LoadRaceCompatibility();
+		RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
+
 		if (!ActorManager::GetSingleton().RegisterPlayer())
 		{
 			logger::error("Failed register player on ElinAnimation");
@@ -68,7 +70,8 @@ namespace Mus {
 		{
 			ActorManager::GetSingleton().ChangerPlayerState();
 		}
-		RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
+
+		IsScanningScriptRace.store(false);
 		return EventResult::kContinue;
 	}
 
