@@ -40,6 +40,9 @@ namespace Mus {
 		{
 			logger::trace("Detected RaceSex Menu");
 			IsRaceSexMenu.store(true);
+			IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
+			g_frameEventDispatcher.addListener(&PlayerGenderDetector::GetSingleton());
+			g_frameEventDispatcher.addListener(&PlayerChangeElinDetector::GetSingleton());
 		}
 	};
 
@@ -53,6 +56,8 @@ namespace Mus {
 		{
 			IsRaceSexMenu.store(false);
 			IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
+			g_frameEventDispatcher.removeListener(&PlayerGenderDetector::GetSingleton());
+			g_frameEventDispatcher.removeListener(&PlayerChangeElinDetector::GetSingleton());
 		}
 	};
 

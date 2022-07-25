@@ -125,8 +125,6 @@ namespace {
         log::trace("Building hook...");
 
         g_frameEventDispatcher.addListener(&ActorManager::GetSingleton());
-        g_frameEventDispatcher.addListener(&PlayerGenderDetector::GetSingleton());
-        g_frameEventDispatcher.addListener(&PlayerChangeElinDetector::GetSingleton());
         hook();
 
         EventHandler::GetSingleton().Register();
