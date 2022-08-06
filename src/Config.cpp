@@ -114,6 +114,10 @@ namespace Mus {
                                     {
                                         cc.Reversed = GetConfigSettingsBoolValue(line, variableName);
                                     }
+                                    else if (variableName == "EmotionActiveLimit")
+                                    {
+                                        cc.EmotionActiveLimit = GetConfigSettingsValue(line, variableName);
+                                    }
                                     else if (variableName == "AnimationEarsSpeed")
                                     {
                                         cc.AnimationEarsSpeed = GetConfigSettingsValue(line, variableName);

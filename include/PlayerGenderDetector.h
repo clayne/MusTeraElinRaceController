@@ -33,7 +33,7 @@ namespace Mus {
 			return (TESPlayer->GetSex() == 0 ? false : true);
 		};
 
-		RE::BSFixedString eventName = "PlayerGenderChangeEvent";
+		const RE::BSFixedString eventName = RE::BSFixedString("PlayerGenderChangeEvent");
 		SKSE::ModCallbackEvent genderEvent = SKSE::ModCallbackEvent(eventName, "", 0.0f, nullptr);
 	};
 }

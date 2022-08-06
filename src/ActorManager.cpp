@@ -15,7 +15,7 @@ namespace Mus {
 	{
 		//logger::trace("work onevent");
 		const auto menu = RE::UI::GetSingleton();
-		if ((e.gamePaused || menu->numPausesGame > 0) || IsRaceSexMenu.load() || IsMainMenu.load())
+		if (((e.gamePaused || menu->numPausesGame > 0) && !IsRaceSexMenu.load()) || IsMainMenu.load())
 			return;
 
 		if (!IsValidTeraElinRace ||
@@ -39,6 +39,17 @@ namespace Mus {
 				else
 				{
 					ChangerActorState(actor);
+				}
+
+				auto datamap = FaceGenDataMap.find(a.first);
+				if (datamap == FaceGenDataMap.end())
+				{
+					logger::trace("Cannot use FaceGen DataMap : {} {:x}", actor->GetDisplayFullName(), a.first);
+				}
+				else
+				{
+					FaceGenMorphDetector& facegendetector = datamap->second;
+					facegendetector.update(actor);
 				}
 
 				logger::trace("update the Actor on Elin animation : {} {:x}", actor->GetDisplayFullName(), a.first);
@@ -74,9 +85,22 @@ namespace Mus {
 		if (ActorMap.find(actor->formID) != ActorMap.end())
 			return true;
 
-		auto controller = AnimationController(actor, config);
-		ActorMap.insert(std::make_pair(actor->formID, controller));
-		logger::info("Registered the {} on Elin animation : {} {:x}", (actor->formID == 0x14) ? "Player " : "Actor ", actor->GetDisplayFullName(), actor->formID);
+		if (Config::GetSingleton().GetSetting().GetFeature().GetEnableEmotion())
+		{
+			auto facegendetector = FaceGenMorphDetector(actor);
+			FaceGenDataMap.insert(std::make_pair(actor->formID, facegendetector));
+		}
+
+		if (Config::GetSingleton().GetSetting().GetAnimation().GetElinAnimation())
+		{
+			if ((actor->formID == 0x14 || actor->formID == 0x7) && !Config::GetSingleton().GetSetting().GetAnimation().GetEnablePlayer())
+				return false;
+			else if (!Config::GetSingleton().GetSetting().GetAnimation().GetEnableNPCs())
+				return false;
+			auto controller = AnimationController(actor, config);
+			ActorMap.insert(std::make_pair(actor->formID, controller));
+		}
+		logger::info("Registered the {} on Elin animation : {} {:x}", (actor->formID == 0x14) ? "Player" : "Actor", actor->GetDisplayFullName(), actor->formID);
 
 		return true;
 	}
@@ -97,6 +121,7 @@ namespace Mus {
 		config.FrequencyMax = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMax();
 		config.FrequencyMin = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMin();
 		config.Reversed = Config::GetSingleton().GetSetting().GetAnimation().GetReversed();
+		config.EmotionActiveLimit = Config::GetSingleton().GetSetting().GetFeature().GetEmotionActiveLimit();
 		config.DialogueAnger = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueAnger();
 		config.DialogueFear = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueFear();
 		config.DialogueHappy = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueHappy();
@@ -155,6 +180,24 @@ namespace Mus {
 
 			TrackingMap.insert(std::make_pair(baseid_list.at(index), config));
 			logger::info("insert {} {:x} on tracking list", pluginname, baseid_list.at(index));
+		}
+	}
+
+	void ActorManager::UpdatePlayerFaceNodes()
+	{
+		auto* Player = RE::PlayerCharacter::GetSingleton();
+		if (!Player)
+			return;
+
+		auto datamap = FaceGenDataMap.find(Player->formID);
+		if (datamap == FaceGenDataMap.end())
+		{
+			logger::trace("Cannot use FaceGen DataMap : {} {:x}", Player->GetDisplayFullName(), Player->formID);
+		}
+		else
+		{
+			FaceGenMorphDetector& facegendetector = datamap->second;
+			facegendetector.PlayerReset(Player);
 		}
 	}
 }

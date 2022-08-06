@@ -36,6 +36,8 @@ namespace Mus {
         bool RemoveHeadPartElinRacesForm();
         bool InitFormList();
         bool GetRuntimeData();
+        void SolveCompatibleVampire();
+        void SolveCompatibleVampireLord();
     private:
         bool isInitFormList = false;
         bool IsProblem = false;
@@ -47,20 +49,27 @@ namespace Mus {
 
         RE::FormID RunTimeTeraElinRaceFormID = NULL;
         RE::FormID RunTimeTeraElinRaceVampFormID = NULL;
+        RE::FormID RunTimeTeraElinRaceFormListID = NULL;
 
-        RE::FormID HeadPartFormList = 0x000A803F;
-        RE::FormID ArgonianFormList = 0x000A8039;
-        RE::FormID KhajiitFormList = 0x000A8036;
+        const RE::FormID HeadPartFormList = 0x000A803F;
+        const RE::FormID ArgonianFormList = 0x000A8039;
+        const RE::FormID KhajiitFormList = 0x000A8036;
 
-        RE::FormID PlayableFormList = 0x00000D62;
-        RE::FormID PlayableVampFormList = 0x00000D63;
-        std::string_view RaceCompatibilityESP = "RaceCompatibility.esm";
+        const RE::FormID VampireLordID = 0x0200283A;
 
-        RE::FormID TeraElinRaceFormID = 0x001000;
-        RE::FormID TeraElinRaceVampFormID = 0x001001;
+        const RE::FormID PlayableFormList = 0x00000D62;
+        const  RE::FormID PlayableVampFormList = 0x00000D63;
+        const std::string_view RaceCompatibilityESP = "RaceCompatibility.esm";
 
-        RE::FormID CompatibleHeadPartRacesID = 0x046E35;
-        std::string_view TeraElinRaceESP = "TeraElinRace.esm";
+        const RE::FormID TeraElinRaceFormID = 0x001000;
+        const RE::FormID TeraElinRaceVampFormID = 0x001001;
+        const RE::FormID TeraElinRaceFormListID = 0x001802;
+        
+        const std::string_view TeraElinRaceESP = "TeraElinRace.esm";
+
+        const RE::FormID DefaultRaceID = 0x00000019;
+
+        const RE::FormID CompatibleHeadPartRacesID = 0x046E35;
 
         std::vector<RE::FormID> VanillaHeadPartFormList;
         std::vector<RE::FormID> VanillaHeadPartFormExceptionList;
@@ -72,6 +81,7 @@ namespace Mus {
         bool CreateHeadPartFormList();
         void AddHeadPartRacesForm(RE::BGSListForm* formlist, bool isAddElin);
         void AddHeadPartBeastsRacesForm(RE::BGSListForm* formlist, bool isArgonian);
+        void AddHeadPartVampireLordForm(RE::BGSListForm* formlist);
         bool SetNonePlayable(RE::BGSHeadPart* headpart);
         void GetVanillaFormList();
         bool ResolveCompatibleHairParts();
@@ -87,7 +97,19 @@ namespace Mus {
             return false;
         }
 
-        //bool IsHeadPartForBeasts();
+        void SolveCompatibleVampireVanilla();
+        const RE::FormID VampireQuest = 0x000EAFD5;
+        void SolveCompatibleVampireSacrosanct();
+        const std::string_view SacrosanctESP = "Sacrosanct - Vampires of Skyrim.esp";
+        const RE::FormID SCS_RacesFormID = 0x00D5929;
+        const RE::FormID SCS_RacesVampireFormID = 0x00D592A;
+
+        const std::string_view HumanoidVampireLordESP = "HNVMain.esp";
+        const std::string_view NoMoreUglyVampireLordESP = "NoMoreUglyVampireLord.esp";
+        const std::string_view NoMoreUglyVampireLord2RVESP = "NoMoreUglyVampireLord_2RV.esp";
+        const RE::FormID VampireLordRaceID = 0x0200283A;
+
+        
     };
 
 }  // namespace Mus

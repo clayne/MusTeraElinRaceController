@@ -1,28 +1,10 @@
 #pragma once
 
 namespace Mus::nif {
-    bool visitObjects(RE::NiAVObject* parent, std::function<bool(RE::NiAVObject*, int)> functor, int depth = 0) {
-        if (!parent) return false;
-        RE::NiNode* node = reinterpret_cast<RE::NiNode*>(parent);
-        if (node) {
-            if (functor(parent, depth))
-                return true;
+    bool visitObjects(RE::NiAVObject* a_object, std::function<bool(RE::NiAVObject*, int)> a_func, int depth = 0);
 
-            for (std::uint16_t i = 0; i < node->GetChildren().size(); i++) {
-                RE::NiAVObject* object = node->GetChildren()[i] ? node->GetChildren()[i].get() : nullptr;
-                if (object) {
-                    if (visitObjects(object, functor, depth + 1))
-                        return true;
-                }
-            }
-        }
-        else if (functor(parent, depth))
-            return true;
-
-        return false;
-    };
-
-    bool printStuff(RE::NiAVObject* avObj, int depth);
+    bool printStuff(RE::NiAVObject* a_object, int depth);
+    RE::BSVisit::BSVisitControl printStuffAlt(RE::NiAVObject* a_object);
 
     class TaskupdateNode : public SKSE::TaskInterface
     {

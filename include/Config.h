@@ -49,17 +49,38 @@ namespace Mus {
         [[nodiscard]] inline  std::string GetExceptionHeadParts() const noexcept {
             return ExceptionHeadParts;
         }
+        [[nodiscard]] inline bool GetCompatibleHumanoidVampireLord() const noexcept {
+            return CompatibleHumanoidVampireLord;
+        }
+        [[nodiscard]] inline  bool GetEnableEmotion() const noexcept {
+            return EnableEmotion;
+        }
+        [[nodiscard]] inline  std::uint8_t GetEmotionActiveLimit() const noexcept {
+            return EmotionActiveLimit;
+        }
+        [[nodiscard]] inline  clock_t GetEmotionScanCooldown() const noexcept {
+            return EmotionScanCooldown;
+        }
 
     private:
         articuno_serde(ar) {
             ar <=> articuno::kv(RaceController, "RaceController");
             ar <=> articuno::kv(BeforeSaveCompatible, "BeforeSaveCompatible");
             ar <=> articuno::kv(ExceptionHeadParts, "ExceptionHeadParts");
+            ar <=> articuno::kv(CompatibleHumanoidVampireLord, "CompatibleHumanoidVampireLord");
+            ar <=> articuno::kv(EnableEmotion, "EnableEmotion");
+            ar <=> articuno::kv(EmotionActiveLimit, "EmotionActiveLimit");
+            EmotionActiveLimit = std::clamp(EmotionActiveLimit, (std::uint8_t)0, (std::uint8_t)100);
+            ar <=> articuno::kv(EmotionScanCooldown, "EmotionScanCooldown");
         }
 
         bool RaceController = true;
         bool BeforeSaveCompatible = false;
         std::string ExceptionHeadParts;
+        bool CompatibleHumanoidVampireLord = true;
+        bool EnableEmotion = true;
+        std::uint8_t EmotionActiveLimit = 70;
+        clock_t EmotionScanCooldown = 100;
 
         friend class articuno::access;
     };
@@ -72,20 +93,20 @@ namespace Mus {
         [[nodiscard]] inline uint32_t GetREarHotkey() const noexcept {
             return REarHotkey;
         }
-        [[nodiscard]] inline uint32_t GetTailsHotKey() const noexcept {
-            return TailsHotKey;
+        [[nodiscard]] inline uint32_t GetTailHotKey() const noexcept {
+            return TailHotKey;
         }
 
     private:
         articuno_serde(ar) {
             ar <=> articuno::kv(LEarHotkey, "LEarHotkey");
             ar <=> articuno::kv(REarHotkey, "REarHotkey");
-            ar <=> articuno::kv(TailsHotKey, "TailsHotKey");
+            ar <=> articuno::kv(TailHotKey, "TailHotKey");
         }
 
         uint32_t LEarHotkey = 75u;
         uint32_t REarHotkey = 76u;
-        uint32_t TailsHotKey = 77u;
+        uint32_t TailHotKey = 77u;
 
         friend class articuno::access;
     };
@@ -281,6 +302,9 @@ namespace Mus {
         }
 
 
+        [[nodiscard]] inline bool GetElinAnimation() const noexcept {
+            return ElinAnimation;
+        }
         [[nodiscard]] inline bool GetElinEarsAnimation() const noexcept {
             return ElinEarsAnimation;
         }
@@ -311,6 +335,8 @@ namespace Mus {
             ar <=> articuno::kv(_directcontrol, "directcontrol");
             ar <=> articuno::kv(_randomcontrol, "randomcontrol");
             ar <=> articuno::kv(_emotioncontrol, "emotioncontrol");
+
+            ar <=> articuno::kv(ElinAnimation, "ElinAnimation");
             ar <=> articuno::kv(ElinEarsAnimation, "ElinEarsAnimation");
             ar <=> articuno::kv(ElinTailAnimation, "ElinTailAnimation");
             ar <=> articuno::kv(DisableOnRaceSexMenu, "DisableOnRaceSexMenu");
@@ -321,6 +347,7 @@ namespace Mus {
             ar <=> articuno::kv(Reversed, "Reversed");
         }
 
+        bool ElinAnimation = true;
         bool ElinEarsAnimation = true;
         bool ElinTailAnimation = true;
         bool DisableOnRaceSexMenu = true;

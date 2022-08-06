@@ -6,6 +6,26 @@ namespace Mus {
         RE::TESDataHandler* DataHandler = RE::TESDataHandler::GetSingleton();
         return DataHandler ? DataHandler->LookupForm(id, modname) : nullptr;
     }
+    
+    inline bool IsThereTheESP(std::string_view modname) 
+    {
+        RE::TESDataHandler* DataHandler = RE::TESDataHandler::GetSingleton();
+        if (!DataHandler)
+            return false;
+
+        if (!REL::Module::IsVR()) //noVR
+        {
+            if (DataHandler->LookupLoadedModByName(modname) || DataHandler->LookupLoadedLightModByName(modname))
+                return true;
+        }
+        else
+        {
+            if (DataHandler->LookupLoadedModByName(modname))
+                return true;
+        }
+
+        return false;
+    }
 
     inline std::uint32_t GetActorBaseFormID(RE::Actor* actor)
     {
@@ -29,7 +49,7 @@ namespace Mus {
 
     inline bool IsLightMod(RE::FormID id)
     {
-        return id >= 0xFE000000;
+        return REL::Module::IsVR() ? false : id >= 0xFE000000; //VR hasn't esl
     }
 
     inline std::string_view GetModNameByIndex(std::uint8_t index)
@@ -105,5 +125,14 @@ namespace Mus {
     inline std::string spaces(int n) {
         auto s = std::string(n, ' ');
         return s;
+    }
+
+    inline std::string lowLetter(std::string_view Letter)
+    {
+        std::string Result = Letter.data();
+        for (size_t i = 0; i < Result.size(); i++) {
+            Result[i] = tolower(Result[i]);
+        }
+        return Result;
     }
 }

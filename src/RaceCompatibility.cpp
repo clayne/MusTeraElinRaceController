@@ -34,6 +34,15 @@ namespace Mus {
         RunTimeTeraElinRaceFormID = RunTimeTeraElinRaceForm->formID;
         RunTimeTeraElinRaceVampFormID = RunTimeTeraElinRaceVampForm->formID;
 
+        RE::TESForm* RunTimeTeraElinRaceFormList = GetFormByID(TeraElinRaceFormListID, TeraElinRaceESP);
+        if (!RunTimeTeraElinRaceFormList)
+        {
+            logger::error("Can't Find Tera Elin Race Form List");
+            IsProblem = true;
+            return false;
+        }
+        RunTimeTeraElinRaceFormListID = RunTimeTeraElinRaceFormList->formID;
+
         RE::TESForm* RunTimePlayableForm = GetFormByID(PlayableFormList, RaceCompatibilityESP);
         if (!RunTimePlayableForm)
         {
@@ -255,6 +264,20 @@ namespace Mus {
             }
         }
     }
+    
+    void RaceCompatibility::AddHeadPartVampireLordForm(RE::BGSListForm* formlist)
+    {
+        if (!IsThereTheESP(HumanoidVampireLordESP) && !IsThereTheESP(NoMoreUglyVampireLordESP) && !IsThereTheESP(NoMoreUglyVampireLord2RVESP))
+            return;
+
+        RE::TESForm* VampireLordForm = RE::TESForm::LookupByID(VampireLordID);
+
+        if (VampireLordForm)
+        {
+            formlist->AddForm(VampireLordForm);
+            logger::debug("Added HeadPartRace on {} FormList {:x} {}", formlist->GetFormEditorID(), VampireLordForm->formID, VampireLordForm->GetName());
+        }
+    }
 
     bool RaceCompatibility::RemoveHeadPartElinRacesForm()
     {
@@ -284,6 +307,7 @@ namespace Mus {
             {
                 list->ClearData();
                 AddHeadPartRacesForm(list, false);
+                //AddHeadPartVampireLordForm(list);
                 isRemoved = true;
             }
 
@@ -310,6 +334,7 @@ namespace Mus {
             {
                 list->ClearData();
                 AddHeadPartBeastsRacesForm(list, false);
+                //AddHeadPartVampireLordForm(list);
                 isRemoved = true;
             }
 
@@ -336,6 +361,7 @@ namespace Mus {
             {
                 list->ClearData();
                 AddHeadPartBeastsRacesForm(list, true);
+                //AddHeadPartVampireLordForm(list);
                 isRemoved = true;
             }
 
@@ -383,6 +409,7 @@ namespace Mus {
         AddHeadPartRacesForm(CompatibleHeadPartRaces, true);
         AddHeadPartBeastsRacesForm(CompatibleHeadPartRaces, false);
         AddHeadPartBeastsRacesForm(CompatibleHeadPartRaces, true);
+        AddHeadPartVampireLordForm(CompatibleHeadPartRaces);
 
         logger::info("Try to compatible work on hair parts... {}", HPE.HeadPartFormMap.size());
         concurrency::parallel_for_each(HPE.HeadPartFormMap.begin(), HPE.HeadPartFormMap.end(), [&](auto& HP) { 
@@ -405,6 +432,17 @@ namespace Mus {
             }
         });
 
+        RE::TESForm* ElinRaceListForm = RE::TESForm::LookupByID(RunTimeTeraElinRaceFormListID);
+        if (ElinRaceListForm)
+        {
+            RE::BGSListForm* ElinRaceList = reinterpret_cast<RE::BGSListForm*>(ElinRaceListForm);
+            if (ElinRaceList)
+            {
+                AddHeadPartVampireLordForm(ElinRaceList);
+                logger::info("VampireLord compatible patch for elin race done");
+            }
+        }
+
         logger::trace("Try resolve Compatible issues in HeadParts finished");
         return true;
     }
@@ -426,5 +464,113 @@ namespace Mus {
         else
             logger::error("Can't load the RaceController");
         return;
+    }
+
+    //sacrosanct
+    void RaceCompatibility::SolveCompatibleVampireSacrosanct()
+    {
+        if (!IsValidTeraElinRace)
+            return;
+
+        if (!IsThereTheESP(SacrosanctESP))
+            return;
+
+        RE::TESForm* SCS_RacesForm = GetFormByID(SCS_RacesFormID, SacrosanctESP);
+        RE::TESForm* SCS_RacesVampForm = GetFormByID(SCS_RacesVampireFormID, SacrosanctESP);
+
+        if (!SCS_RacesForm || !SCS_RacesVampForm)
+            return;
+
+        logger::info("Try compatible patch for {}...", SacrosanctESP);
+
+        RE::BGSListForm* SCS_RacesFormlist = reinterpret_cast<RE::BGSListForm*>(SCS_RacesForm);
+        RE::BGSListForm* SCS_RacesVampFormlist = reinterpret_cast<RE::BGSListForm*>(SCS_RacesVampForm);
+
+        if (!SCS_RacesFormlist || !SCS_RacesVampFormlist)
+            return;
+
+        SCS_RacesFormlist->AddForm(RE::TESForm::LookupByID(RunTimeTeraElinRaceFormID));
+        SCS_RacesVampFormlist->AddForm(RE::TESForm::LookupByID(RunTimeTeraElinRaceVampFormID));
+
+        logger::info("Compatible patch for {} done", SacrosanctESP);
+    }
+
+    //vanilla
+    void RaceCompatibility::SolveCompatibleVampireVanilla()
+    {
+        if (!RunTimePlayableFormList || !RunTimePlayableVampFormList)
+            return;
+
+        RunTimePlayableFormList->AddForm(RE::TESForm::LookupByID(RunTimeTeraElinRaceFormID));
+        RunTimePlayableVampFormList->AddForm(RE::TESForm::LookupByID(RunTimeTeraElinRaceVampFormID));
+    }
+
+    //HumanoidVampireLord (HNV/NoMoreUgly)
+    void RaceCompatibility::SolveCompatibleVampireLord()
+    {
+        if (!Config::GetSingleton().GetSetting().GetFeature().GetCompatibleHumanoidVampireLord())
+            return;
+
+        if (!isPlayerRaceTeraElin())
+            return;
+
+        std::string_view modname;
+        if (IsThereTheESP(HumanoidVampireLordESP))
+            modname = HumanoidVampireLordESP;
+        else if (IsThereTheESP(NoMoreUglyVampireLordESP))
+            modname = NoMoreUglyVampireLordESP;
+        else if (IsThereTheESP(NoMoreUglyVampireLord2RVESP))
+            modname = NoMoreUglyVampireLord2RVESP;
+        else
+            return;
+
+        logger::info("Try compatible patch for Vampire Lord of {}...", modname);
+
+        RE::TESForm* VampLordForm = RE::TESForm::LookupByID(VampireLordRaceID);
+        if (!VampLordForm)
+            return;
+        RE::TESRace* VampLordRace = reinterpret_cast<RE::TESRace*>(VampLordForm);
+        if (!VampLordRace)
+            return;
+
+        RE::TESForm* ElinRaceForm = RE::TESForm::LookupByID(RunTimeTeraElinRaceFormID);
+        if (!ElinRaceForm)
+            return;
+        RE::TESRace* ElinRace = reinterpret_cast<RE::TESRace*>(ElinRaceForm);
+        if (!ElinRace)
+            return;
+
+        RE::TESForm* DefaultRaceForm = RE::TESForm::LookupByID(DefaultRaceID);
+        if (!DefaultRaceForm)
+            return;
+        RE::TESRace* DefaultRace = reinterpret_cast<RE::TESRace*>(DefaultRaceForm);
+        if (!DefaultRace)
+            return;
+
+        VampLordRace->skin = ElinRace->skin;
+        VampLordRace->data.height[RE::SEXES::kMale] = ElinRace->data.height[RE::SEXES::kMale];
+        VampLordRace->data.height[RE::SEXES::kFemale] = ElinRace->data.height[RE::SEXES::kFemale];
+        //VampLordRace->data.height[RE::SEXES::kTotal] = ElinRace->data.height[RE::SEXES::kTotal];
+        if (!VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kFaceGenHead))
+            VampLordRace->data.flags += RE::RACE_DATA::Flag::kFaceGenHead;
+        if (VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverlayHeadPartList))
+            VampLordRace->data.flags -= RE::RACE_DATA::Flag::kOverlayHeadPartList;
+        if (VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverrideHeadPartList))
+            VampLordRace->data.flags -= RE::RACE_DATA::Flag::kOverrideHeadPartList;
+        VampLordRace->skeletonModels->SetModel(ElinRace->skeletonModels->GetModel());
+        VampLordRace->bipedObjectNameA[RE::BIPED_OBJECTS::kTail] = ElinRace->bipedObjectNameA[RE::BIPED_OBJECTS::kTail];
+        VampLordRace->faceRelatedData[RE::SEXES::kMale] = ElinRace->faceRelatedData[RE::SEXES::kMale];
+        VampLordRace->faceRelatedData[RE::SEXES::kFemale] = ElinRace->faceRelatedData[RE::SEXES::kFemale];
+        //VampLordRace->faceRelatedData[RE::SEXES::kTotal] = ElinRace->faceRelatedData[RE::SEXES::kTotal];
+        VampLordRace->morphRace = ElinRace;
+        VampLordRace->armorParentRace = DefaultRace;
+
+        logger::info("Compatible patch for Vampire Lord of {} done", modname);
+    }
+
+    void RaceCompatibility::SolveCompatibleVampire()
+    {
+        SolveCompatibleVampireVanilla();
+        SolveCompatibleVampireSacrosanct();
     }
 }

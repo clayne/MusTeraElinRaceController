@@ -1,17 +1,49 @@
 #include "nifUtil.h"
 
 namespace Mus::nif {
-    bool printStuff(RE::NiAVObject* avObj, int depth) {
-        if (!avObj) return false;
+    bool visitObjects(RE::NiAVObject* a_object, std::function<bool(RE::NiAVObject*, int)> a_func, int depth){
+        if (!a_object) return true;
+
+        auto result = a_func(a_object, depth);
+        if (!result)
+            return result;
+
+        result = true;
+        auto node = a_object->AsNode();
+        if (node) {
+            for (auto& child : node->GetChildren()) {
+                result = visitObjects(child.get(), a_func, depth + 1);
+                if (!result) {
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    bool printStuff(RE::NiAVObject* a_object, int depth) {
+        if (!a_object) return true;
         std::string sss = spaces(depth);
         const char* ss = sss.c_str();
-        logger::debug("{}avObj Name = {}, RTTI = {}", ss, avObj->name.c_str(), avObj->GetRTTI() ? avObj->GetRTTI()->name : "");
+        logger::debug("{}avObj Name = {}, RTTI = {}", ss, a_object->name.c_str(), a_object->GetRTTI() ? a_object->GetRTTI()->name : "");
 
-        RE::NiNode* node = reinterpret_cast<RE::NiNode*>(avObj);
+        auto node = a_object->AsNode();
         if (node) {
-            logger::debug("{}node {}, RTTI {}", ss, node->name.c_str(), node->GetRTTI() ? avObj->GetRTTI()->name : "");
+            logger::debug("{}node {}, RTTI {}", ss, node->name.c_str(), node->GetRTTI() ? a_object->GetRTTI()->name : "");
         }
-        return false;
+        return true;
+    }
+
+    RE::BSVisit::BSVisitControl printStuffAlt(RE::NiAVObject* a_object) {
+        if (!a_object) return RE::BSVisit::BSVisitControl::kContinue;
+        logger::debug("avObj Name = {}, RTTI = {}", a_object->name.c_str(), a_object->GetRTTI() ? a_object->GetRTTI()->name : "");
+
+        auto node = a_object->AsNode();
+        if (node) {
+            logger::debug("node {}, RTTI {}", node->name.c_str(), node->GetRTTI() ? a_object->GetRTTI()->name : "");
+        }
+        return RE::BSVisit::BSVisitControl::kContinue;
     }
 
     void TaskupdateNode::Run() {

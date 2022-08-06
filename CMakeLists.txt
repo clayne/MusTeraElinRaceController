@@ -6,7 +6,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         MusTeraElinRaceController
-        VERSION 1.0.1
+        VERSION 1.1.0
         DESCRIPTION "TeraElinRace Feature Controller by Acro."
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
@@ -30,6 +30,7 @@ set(headers
         include/ConsoleLog.h
         include/PapyrusScripts.h
         include/PlayerGenderDetector.h
+        include/FaceGenMorphDetector.h
         include/PlayerChangeElinDetector.h
         include/HeadPartExplorer.h
         include/Hook.h
@@ -47,6 +48,7 @@ set(sources
         src/ConsoleLog.cpp
         src/PapyrusScripts.cpp
         src/PlayerGenderDetector.cpp
+        src/FaceGenMorphDetector.cpp
         src/PlayerChangeElinDetector.cpp
         src/HeadPartExplorer.cpp
         src/Hook.cpp

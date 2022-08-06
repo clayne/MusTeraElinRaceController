@@ -1,19 +1,29 @@
 #include "HookEvent.h"
 
 namespace Mus {
-	void EventHandler::Register()
+	void EventHandler::Register(bool isLoaded)
 	{
-		if (const auto Menu = RE::UI::GetSingleton()) {
-			logger::info("Sinking menu events...");
-			Menu->AddEventSink<RE::MenuOpenCloseEvent>(this);
-		}
+		if (!isLoaded)
+		{
+			if (const auto Menu = RE::UI::GetSingleton()) {
+				logger::info("Sinking menu events...");
+				Menu->AddEventSink<RE::MenuOpenCloseEvent>(this);
+			}
 
-		if (const auto EventHolder = RE::ScriptEventSourceHolder::GetSingleton()) {
-			logger::info("Sinking loaded events...");
-			EventHolder->AddEventSink<RE::TESLoadGameEvent>(this);
-			EventHolder->AddEventSink<RE::TESObjectLoadedEvent>(this);
+			if (const auto EventHolder = RE::ScriptEventSourceHolder::GetSingleton()) {
+				logger::info("Sinking load/switch events...");
+				EventHolder->AddEventSink<RE::TESLoadGameEvent>(this);
+				EventHolder->AddEventSink<RE::TESObjectLoadedEvent>(this);
+				EventHolder->AddEventSink<RE::TESSwitchRaceCompleteEvent>(this);
+			}
 		}
-
+		else
+		{
+			if (const auto Device = RE::BSInputDeviceManager::GetSingleton()) {
+				logger::info("Sinking device events...");
+				Device->AddEventSink(InputEventHandler::GetSingleton());
+			}
+		}
 	}
 
 	EventResult EventHandler::ProcessEvent(const RE::MenuOpenCloseEvent* evn, RE::BSTEventSource<RE::MenuOpenCloseEvent>*)
@@ -42,7 +52,6 @@ namespace Mus {
 			IsRaceSexMenu.store(true);
 			IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
 			g_frameEventDispatcher.addListener(&PlayerGenderDetector::GetSingleton());
-			g_frameEventDispatcher.addListener(&PlayerChangeElinDetector::GetSingleton());
 		}
 	};
 
@@ -57,15 +66,17 @@ namespace Mus {
 			IsRaceSexMenu.store(false);
 			IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
 			g_frameEventDispatcher.removeListener(&PlayerGenderDetector::GetSingleton());
-			g_frameEventDispatcher.removeListener(&PlayerChangeElinDetector::GetSingleton());
+			ActorManager::GetSingleton().UpdatePlayerFaceNodes();
 		}
 	};
 
 	EventResult EventHandler::ProcessEvent(const RE::TESLoadGameEvent* evn, RE::BSTEventSource<RE::TESLoadGameEvent>*) 
 	{
-		logger::trace("Detected Load Game Event");
+		logger::debug("Detected Load Game Event");
+		Register(true);
 		RaceCompatibility::GetSingleton().LoadRaceCompatibility();
 		RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
+		RaceCompatibility::GetSingleton().SolveCompatibleVampireLord();
 
 		if (!ActorManager::GetSingleton().RegisterPlayer())
 		{
@@ -76,7 +87,6 @@ namespace Mus {
 			ActorManager::GetSingleton().ChangerPlayerState();
 		}
 
-		IsScanningScriptRace.store(false);
 		return EventResult::kContinue;
 	}
 
@@ -102,4 +112,88 @@ namespace Mus {
 
 		return EventResult::kContinue;
 	}
+
+	EventResult EventHandler::ProcessEvent(const RE::TESSwitchRaceCompleteEvent* evn, RE::BSTEventSource<RE::TESSwitchRaceCompleteEvent>*)
+	{
+		if (!evn || !evn->subject)
+			return EventResult::kContinue;
+
+		auto* npc = evn->subject.get();
+		if (!npc)
+			return EventResult::kContinue;
+
+		logger::error("Detected Race change Event : {:x}", npc->formID);
+
+		if (npc->formID == 0x7 || npc->formID == 0x14)
+		{
+			logger::debug("Detected Player Race change");
+			IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
+
+			if (IsPlayerElin.load())
+			{
+				RaceCompatibility::GetSingleton().LoadRaceCompatibility();
+				RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
+				RaceCompatibility::GetSingleton().SolveCompatibleVampireLord();
+
+				if (!ActorManager::GetSingleton().RegisterPlayer())
+				{
+					logger::error("Failed register player on ElinAnimation");
+				}
+				else
+				{
+					ActorManager::GetSingleton().ChangerPlayerState();
+				}
+			}
+		}
+
+		return EventResult::kContinue;
+	}
+	/*
+	EventResult EventHandler::ProcessEvent(const RE::InputEvent* evn, RE::BSTEventSource<RE::InputEvent>*)
+	{
+		if (!evn)
+			return EventResult::kContinue;
+
+		const RE::ButtonEvent* button = evn->AsButtonEvent();
+		if (!button)
+			return EventResult::kContinue;
+
+		if (button->IsPressed())
+		{
+			if (button->GetIDCode() == EarLKey)
+			{
+				PressEarLKey.store(true);
+			}
+			else if (button->GetIDCode() == EarRKey)
+			{
+				PressEarRKey.store(true);
+			}
+			else if (button->GetIDCode() == TailKey)
+			{
+				PressTailKey.store(true);
+			}
+
+			logger::trace("Press Button Event : {}", button->GetIDCode());
+		}
+		else
+		{
+			if (button->GetIDCode() == EarLKey)
+			{
+				PressEarLKey.store(false);
+			}
+			else if (button->GetIDCode() == EarRKey)
+			{
+				PressEarRKey.store(false);
+			}
+			else if (button->GetIDCode() == TailKey)
+			{
+				PressTailKey.store(false);
+			}
+
+			logger::trace("Unpress Button Event : {}", button->GetIDCode());
+		}
+
+		return EventResult::kContinue;
+	}
+	*/
 }
