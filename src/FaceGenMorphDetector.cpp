@@ -49,7 +49,7 @@ namespace Mus
 			if (!SendFaceGenMorphEvent())
 				logger::error("can't send the event : {:x} {}", id, name);
 
-		if (isNeedUpdatedMorph || IsRaceSexMenu.load())
+		if (isNeedUpdatedMorph || (IsRaceSexMenu.load() && (id == 0x14 || id == 0x7)))
 			if (!updateEmotionMorphNodes())
 				logger::error("can't update the emotion effects : {:x} {}", id, name);
 
@@ -152,7 +152,7 @@ namespace Mus
 		logger::trace("{:x} {} : try set alpha of the face node...", id, name);
 
 		RE::BSGeometry* a_geometry = reinterpret_cast<RE::BSGeometry*>(obj);
-
+		
 		using State = RE::BSGeometry::States;
 
 		auto effect = a_geometry->GetGeometryRuntimeData().properties[State::kEffect].get();
@@ -206,7 +206,9 @@ namespace Mus
 			logger::trace("EmotionEvent Send : {:x} {} {} {}", id, name, numArg, strArg.data());
 		}
 		else
-			return false;
+		{
+			logger::error("Can't Send EmotionEvent : {:x} {}", id, name);
+		}
 
 		return true;
 	}
