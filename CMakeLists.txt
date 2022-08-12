@@ -42,6 +42,7 @@ set(headers
 
 set(sources
         src/INiAVObject.cpp
+        src/IRaceSexMenu.cpp
         src/nifUtil.cpp
         src/Config.cpp
         src/RaceCompatibility.cpp

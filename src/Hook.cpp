@@ -39,6 +39,37 @@ namespace Mus {
 		DetourDetach((void**)UnkEngine::_onFrame_GetPtrAddr(), (void*)GetFnAddr(&UnkEngine::onFrame));
 	}
 
+	/*
+	constexpr REL::VariantID SliderLookup(51534, 52409, 0x008E39B0);
+	void SlidersHook()
+	{
+		struct SliderLookup_Entry_Code : Xbyak::CodeGenerator {
+			SliderLookup_Entry_Code(void* buf, std::uint64_t funcAddr, std::uint64_t targetAddr) : Xbyak::CodeGenerator(4096, buf)
+			{
+				Xbyak::Label retnLabel;
+				Xbyak::Label funcLabel;
+
+				lea(rcx, ptr[rax + rbx]);		 // Load Slider into RCX
+				call(ptr[rip + funcLabel]);		 // Call function
+				movss(xmm6, xmm0);				 // Move return into register
+				mov(rcx, ptr[rcx + 0x18]);		 // Restore overwrite (this assumes our call doesnt clobber RCX)
+				jmp(ptr[rip + retnLabel]);		 // Jump back
+
+				L(funcLabel);
+				dq(funcAddr);
+
+				L(retnLabel);
+				dq(targetAddr + 0x5);
+			}
+		};
+
+		void* codeBuf = g_localTrampoline.StartAlloc();
+		SliderLookup_Entry_Code code(codeBuf, uintptr_t(SliderLookup_Hooked), SliderLookup.GetUIntPtr());
+		g_localTrampoline.EndAlloc(code.getCurr());
+
+		g_branchTrampoline.Write5Branch(SliderLookup_Target.GetUIntPtr(), uintptr_t(code.getCode()));
+	}
+	*/
 
 	void hook()
 	{

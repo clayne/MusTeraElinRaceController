@@ -16,7 +16,7 @@ namespace Mus {
 			return instance;
 		}
 
-		void Register(bool isLoaded);
+		void Register();
 
 	protected:
 		EventResult ProcessEvent(const RE::MenuOpenCloseEvent* evn, RE::BSTEventSource<RE::MenuOpenCloseEvent>*) override;
@@ -34,69 +34,18 @@ namespace Mus {
 		std::uint32_t TailKey = 0x0;*/
 	};
 
-	class InputEventHandler final : 
+	class InputEventHandler : 
 		public RE::BSTEventSink<RE::InputEvent*> {
-
 	public:
 		static InputEventHandler* GetSingleton() {
 			static InputEventHandler* instance;
 			return instance;
 		}
 
+		void Register();
+
 	protected:
-		virtual EventResult ProcessEvent(const RE::InputEvent** evn, RE::BSTEventSource<RE::InputEvent*>*) {
-			if (isFirstRun)
-			{
-				EarLKey = Config::GetSingleton().GetSetting().GetAnimation().GetDirectControl().GetLEarHotkey();
-				EarRKey = Config::GetSingleton().GetSetting().GetAnimation().GetDirectControl().GetREarHotkey();
-				TailKey = Config::GetSingleton().GetSetting().GetAnimation().GetDirectControl().GetTailHotKey();
-				isFirstRun = false;
-			}
-
-			if (!evn || !(*evn))
-				return EventResult::kContinue;
-
-			const RE::ButtonEvent* button = (*evn)->AsButtonEvent();
-			if (!button)
-				return EventResult::kContinue;
-
-			if (button->IsPressed())
-			{
-				if (button->GetIDCode() == EarLKey)
-				{
-					PressEarLKey.store(true);
-				}
-				else if (button->GetIDCode() == EarRKey)
-				{
-					PressEarRKey.store(true);
-				}
-				else if (button->GetIDCode() == TailKey)
-				{
-					PressTailKey.store(true);
-				}
-
-				logger::trace("Press Button Event : {}", button->GetIDCode());
-			}
-			else
-			{
-				if (button->GetIDCode() == EarLKey)
-				{
-					PressEarLKey.store(false);
-				}
-				else if (button->GetIDCode() == EarRKey)
-				{
-					PressEarRKey.store(false);
-				}
-				else if (button->GetIDCode() == TailKey)
-				{
-					PressTailKey.store(false);
-				}
-
-				logger::trace("Unpress Button Event : {}", button->GetIDCode());
-			}
-
-			return EventResult::kContinue;
-		};
+		EventResult ProcessEvent(const RE::InputEvent*& evn, RE::BSTEventSource<RE::InputEvent*>*);
 
 	private:
 		std::uint32_t EarLKey = 0x0;

@@ -22,7 +22,7 @@ namespace Mus {
 		if (!actor || !actor->loadedData || !actor->loadedData->data3D || !actor->loadedData->data3D.get())
 			return;
 
-		if (IsRaceSexMenu.load())
+		if (IsRaceSexMenu.load() && isPlayer(id))
 		{
 			if (!isResetRaceMenu)
 			{
@@ -660,17 +660,16 @@ namespace Mus {
 
 	bool AnimationController::isFaceMorph()
 	{
-		auto& FaceGenDataMap = ActorManager::GetSingleton().FaceGenDataMap;
-		auto map = FaceGenDataMap.find(id);
-		if (map == FaceGenDataMap.end())
+		auto FaceGenData = Mus::ActorManager::GetSingleton().GetFaceGenData(id);
+		if (!FaceGenData)
 			return false;
 
-		auto FaceGenAnimValue = map->second.GetActiveMorphValue();
+		auto FaceGenAnimValue = FaceGenData->GetActiveMorphValue();
 
-		if (FaceGenAnimValue < animConfig.EmotionActiveLimit)
+		if (FaceGenAnimValue < animConfig.EmotionAnimationActiveThreshold)
 			return false;
 
-		auto FaceGenAnimType = map->second.GetActiveMorphType();
+		auto FaceGenAnimType = FaceGenData->GetActiveMorphType();
 
 		return (animation_type::noAnim != getAnimationType(FaceGenAnimType));
 	}

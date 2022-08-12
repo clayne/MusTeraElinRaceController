@@ -22,39 +22,50 @@ namespace Mus {
 			!RE::PlayerCharacter::GetSingleton() || !RE::PlayerCharacter::GetSingleton()->loadedData || !RE::PlayerCharacter::GetSingleton()->loadedData->data3D)
 			return;
 
-		ControllActors();
+		//ControllAnimtionActors();
+		ControllFacegenActors();
 	}
 
-	void ActorManager::ControllActors()
+	void ActorManager::ControllAnimtionActors()
 	{
 		const float IntervalTimeTick = GetFrameIntervalTimeTick();
-		concurrency::parallel_for_each(ActorMap.begin(), ActorMap.end(), [&](auto& a) {
-			RE::Actor* actor = reinterpret_cast<RE::Actor*>(RE::TESForm::LookupByID(a.first));
+		concurrency::parallel_for_each(ActorMap.begin(), ActorMap.end(), [&](auto& map) {
+			RE::Actor* actor = reinterpret_cast<RE::Actor*>(RE::TESForm::LookupByID(map.first));
 			if (actor)
 			{
-				if (a.first == 0x14)
+				if (isPlayer(actor->formID))
 				{
-					ChangerPlayerState();
+					ChangerPlayerState(map.second);
 				}
 				else
 				{
-					ChangerActorState(actor);
+					ChangerActorState(map.second, actor);
 				}
 
-				auto datamap = FaceGenDataMap.find(a.first);
-				if (datamap == FaceGenDataMap.end())
+				logger::trace("update the Actor on Elin animation : {} {:x}", actor->GetDisplayFullName(), map.first);
+				map.second.IntervalTimeTick = IntervalTimeTick;
+				map.second.update(actor);
+			}
+		});
+	}
+
+	void ActorManager::ControllFacegenActors()
+	{
+		concurrency::parallel_for_each(FaceGenDataMap.begin(), FaceGenDataMap.end(), [&](auto& map) {
+			RE::Actor* actor = reinterpret_cast<RE::Actor*>(RE::TESForm::LookupByID(map.first));
+			if (actor)
+			{
+				if (isPlayer(actor->formID))
 				{
-					logger::trace("Cannot use FaceGen DataMap : {} {:x}", actor->GetDisplayFullName(), a.first);
+					ChangerPlayerState(map.second);
 				}
 				else
 				{
-					FaceGenMorphDetector& facegendetector = datamap->second;
-					facegendetector.update(actor);
+					ChangerActorState(map.second, actor);
 				}
 
-				logger::trace("update the Actor on Elin animation : {} {:x}", actor->GetDisplayFullName(), a.first);
-				a.second.IntervalTimeTick = IntervalTimeTick;
-				a.second.update(actor);
+				logger::trace("update the Actor on Elin animation : {} {:x}", actor->GetDisplayFullName(), map.first);
+				map.second.update(actor);
 			}
 		});
 	}
@@ -67,17 +78,32 @@ namespace Mus {
 		logger::debug("Verify configure the actor {} {:x}...", actor->GetDisplayFullName(), actor->formID);
 
 		RE::TESNPC* npc = actor->GetActorBase();
+		
+		if (!npc->GetRace()->GetFormEditorID())
+			return;
+		std::string_view racenameview = npc->GetRace()->GetFormEditorID();
+		logger::info("Checking Race {} {} {:x}...", racenameview.data(), actor->GetDisplayFullName(), actor->formID);
+		std::string racename = lowLetter(racenameview);
+		if (racename.find("elin") == std::string::npos)
+		{
+			logger::info("{} {} {:x} is not support race", racenameview.data(), actor->GetDisplayFullName(), actor->formID);
+			return;
+		}
+
 		auto list = TrackingMap.find(npc->formID);
 
+		ControllerConfig config;
+
 		if (list == TrackingMap.end())
-			return;
+			config = MultipleConfig::GetConfigDefault();
+		else
+			config = list->second;
 
-		ControllerConfig config = list->second;
-
-		RegisterActor(actor, config);
+		RegisterAnimationActor(actor, config);
+		RegisterFacegenActor(actor, config);
 	}
 
-	bool ActorManager::RegisterActor(RE::Actor* actor, ControllerConfig config)
+	bool ActorManager::RegisterAnimationActor(RE::Actor* actor, ControllerConfig config)
 	{
 		if (!actor || !actor->loadedData || !actor->loadedData->data3D)
 			return false;
@@ -85,22 +111,34 @@ namespace Mus {
 		if (ActorMap.find(actor->formID) != ActorMap.end())
 			return true;
 
-		if (Config::GetSingleton().GetSetting().GetFeature().GetEnableEmotion())
-		{
-			auto facegendetector = FaceGenMorphDetector(actor);
-			FaceGenDataMap.insert(std::make_pair(actor->formID, facegendetector));
-		}
-
-		if (Config::GetSingleton().GetSetting().GetAnimation().GetElinAnimation())
-		{
-			if ((actor->formID == 0x14 || actor->formID == 0x7) && !Config::GetSingleton().GetSetting().GetAnimation().GetEnablePlayer())
-				return false;
-			else if (!Config::GetSingleton().GetSetting().GetAnimation().GetEnableNPCs())
-				return false;
-			auto controller = AnimationController(actor, config);
-			ActorMap.insert(std::make_pair(actor->formID, controller));
-		}
+		if (!Config::GetSingleton().GetSetting().GetAnimation().GetElinAnimation())
+			return false;
+		if ((isPlayer(actor->formID)) && !Config::GetSingleton().GetSetting().GetAnimation().GetEnablePlayer())
+			return false;
+		else if (!isPlayer(actor->formID) && !Config::GetSingleton().GetSetting().GetAnimation().GetEnableNPCs())
+			return false;
+		auto controller = AnimationController(actor, config);
+		ActorMap.insert(std::make_pair(actor->formID, controller));
 		logger::info("Registered the {} on Elin animation : {} {:x}", (actor->formID == 0x14) ? "Player" : "Actor", actor->GetDisplayFullName(), actor->formID);
+
+		return true;
+	}
+
+	bool ActorManager::RegisterFacegenActor(RE::Actor* actor, ControllerConfig config)
+	{
+		if (!actor || !actor->loadedData || !actor->loadedData->data3D)
+			return false;
+
+		if (FaceGenDataMap.find(actor->formID) != FaceGenDataMap.end())
+			return true;
+		
+		if (!Config::GetSingleton().GetSetting().GetFeature().GetEmotionHeadOverlay())
+			return false;
+		if (!isPlayer(actor->formID) && Config::GetSingleton().GetSetting().GetFeature().GetEmotionHeadOverlayOnlyPlayer())
+			return false;
+		auto facegendetector = FaceGenMorphDetector(actor, config.EmotionEffectActiveThreshold);
+		FaceGenDataMap.insert(std::make_pair(actor->formID, facegendetector));
+		logger::info("Registered the {} on Elin facegen : {} {:x}", (actor->formID == 0x14) ? "Player" : "Actor", actor->GetDisplayFullName(), actor->formID);
 
 		return true;
 	}
@@ -114,59 +152,59 @@ namespace Mus {
 
 		logger::info("Try to register the Player on Elin animation : {} {:x}", Player->GetDisplayFullName(), Player->formID);
 
-		ControllerConfig config;
+		ControllerConfig config = MultipleConfig::GetConfigDefault();
 
-		config.AnimationEarsSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationEarsSpeed();
-		config.AnimationTailSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationTailSpeed();
-		config.FrequencyMax = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMax();
-		config.FrequencyMin = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMin();
-		config.Reversed = Config::GetSingleton().GetSetting().GetAnimation().GetReversed();
-		config.EmotionActiveLimit = Config::GetSingleton().GetSetting().GetFeature().GetEmotionActiveLimit();
-		config.DialogueAnger = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueAnger();
-		config.DialogueFear = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueFear();
-		config.DialogueHappy = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueHappy();
-		config.DialogueSad = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueSad();
-		config.DialogueSurprise = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueSurprise();
-		config.DialoguePuzzled = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialoguePuzzled();
-		config.DialogueDisgust = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueDisgust();
-		config.MoodAnger = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodAnger();
-		config.MoodFear = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodFear();
-		config.MoodHappy = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodHappy();
-		config.MoodSad = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodSad();
-		config.MoodSurprise = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodSurprise();
-		config.MoodPuzzled = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodPuzzled();
-		config.MoodDisgust = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodDisgust();
-
-		return RegisterActor(Player, config);
+		return (RegisterAnimationActor(Player, config) && RegisterFacegenActor(Player, config));
 	}
 
-	void ActorManager::ChangerActorState(RE::Actor* actor)
+	void ActorManager::ChangerActorState(AnimationController& ac, RE::Actor* actor)
 	{
-		if (!actor || !actor->loadedData || !actor->loadedData->data3D)
+		if (!actor)
 			return;
 
-		auto am = ActorMap.find(actor->formID);
-		if (am == ActorMap.end())
-			return;
-
-		AnimationController& ac = am->second;
-
-		if (actor->IsDead())
+		if (actor->IsDead() || actor->IsDeleted())
 			ac.IsValidActor = false;
+		else if (!actor->loadedData || !actor->loadedData->data3D)
+			ac.IsValidActor = false;
+		else
+			ac.IsValidActor = true;
 	}
 
-	void ActorManager::ChangerPlayerState()
+	void ActorManager::ChangerActorState(FaceGenMorphDetector& fgd, RE::Actor* actor)
+	{
+		if (!actor)
+			return;
+
+		if (actor->IsDead() || actor->IsDeleted())
+			fgd.IsValidActor = false;
+		else if (!actor->loadedData || !actor->loadedData->data3D)
+			fgd.IsValidActor = false;
+		else
+			fgd.IsValidActor = true;
+	}
+
+	void ActorManager::ChangerPlayerState(AnimationController& ac)
 	{
 		auto* Player = RE::PlayerCharacter::GetSingleton();
 		if (!Player)
 			return;
-		
-		auto am = ActorMap.find(Player->formID);
-		if (am == ActorMap.end())
+
+		ac.IsValidActor = IsPlayerElin;
+
+		if (!Player->loadedData || !Player->loadedData->data3D)
+			ac.IsValidActor = false;
+	}
+
+	void ActorManager::ChangerPlayerState(FaceGenMorphDetector& fgd)
+	{
+		auto* Player = RE::PlayerCharacter::GetSingleton();
+		if (!Player)
 			return;
 
-		AnimationController& ac = am->second;
-		ac.IsValidActor = IsPlayerElin;
+		fgd.IsValidActor = IsPlayerElin;
+
+		if (!Player->loadedData || !Player->loadedData->data3D)
+			fgd.IsValidActor = false;
 	}
 
 	void ActorManager::InsertTrackingMap(std::vector<RE::FormID> baseid_list, std::string pluginname, ControllerConfig config)

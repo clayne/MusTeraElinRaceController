@@ -49,7 +49,7 @@ namespace Mus {
 
     inline bool IsLightMod(RE::FormID id)
     {
-        return REL::Module::IsVR() ? false : id >= 0xFE000000; //VR hasn't esl
+        return REL::Module::IsVR() ? false : (id >= 0xFE000000); //VR hasn't esl
     }
 
     inline std::string_view GetModNameByIndex(std::uint8_t index)
@@ -75,57 +75,12 @@ namespace Mus {
             return GetLightModNameByIndex(GetLightModIndex(id));
     }
 
-    inline std::vector<std::string> get_all_files_names_within_folder(std::string folder)
-    {
-        std::vector<std::string> names;
-
-        DIR* directory = opendir(folder.c_str());
-        struct dirent* direntStruct;
-
-        if (directory != nullptr) {
-            while (direntStruct = readdir(directory)) {
-                names.emplace_back(direntStruct->d_name);
-            }
-        }
-        closedir(directory);
-
-        return names;
-    }
-
-    inline bool stringStartsWith(std::string str, std::string prefix)
-    {
-        // convert string to back to lower case
-        std::for_each(str.begin(), str.end(), [](char& c)
-            {
-                c = ::tolower(c);
-            });
-        // std::string::find returns 0 if toMatch is found at starting
-        if (str.find(prefix) == 0)
-            return true;
-        else
-            return false;
-    }
-
-    inline bool stringEndsWith(std::string str, std::string const& suffix)
-    {
-        std::for_each(str.begin(), str.end(), [](char& c)
-            {
-                c = ::tolower(c);
-            });
-        if (str.length() >= suffix.length())
-        {
-            return (0 == str.compare(str.length() - suffix.length(), suffix.length(), suffix));
-        }
-        else
-        {
-            return false;
-        }
-    }
-
     inline std::string spaces(int n) {
         auto s = std::string(n, ' ');
         return s;
     }
+
+    inline bool isPlayer(RE::FormID id) { return (id == 0x14 || id == 0x7); };
 
     inline std::string lowLetter(std::string_view Letter)
     {
@@ -134,5 +89,13 @@ namespace Mus {
             Result[i] = tolower(Result[i]);
         }
         return Result;
+    }
+
+    inline bool IsMatchName(std::string base, std::string find)
+    {
+        std::string baselow = lowLetter(base.c_str());
+        std::string findlow = lowLetter(find.c_str());
+
+        return (baselow.find(findlow) != std::string::npos);
     }
 }

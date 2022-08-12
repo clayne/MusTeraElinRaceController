@@ -94,7 +94,7 @@ namespace {
     void InitializePapyrus() 
     {
         log::trace("Initializing Papyrus binding...");
-        if (GetPapyrusInterface()->Register(Mus::RegisterPapyrusFunctions)) 
+        if (GetPapyrusInterface()->Register(Mus::Papyrus::RegisterPapyrusFunctions))
         {
             log::debug("Papyrus functions bound.");
         } 
@@ -127,7 +127,7 @@ namespace {
         g_frameEventDispatcher.addListener(&ActorManager::GetSingleton());
         hook();
 
-        EventHandler::GetSingleton().Register(false);
+        EventHandler::GetSingleton().Register();
     }
 
     void kDataloadedFunction()
@@ -161,7 +161,7 @@ namespace {
 
                 // Skyrim game events.
                 case MessagingInterface::kNewGame: // Player starts a new game from main menu.
-                    EventHandler::GetSingleton().Register(true);
+                    InputEventHandler::GetSingleton()->Register();
                     break;
                 case MessagingInterface::kPreLoadGame: // Player selected a game to load, but it hasn't loaded yet.
                     // Data will be the name of the loaded save.

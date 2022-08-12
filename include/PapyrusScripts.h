@@ -1,9 +1,9 @@
 #pragma once
 
 namespace Mus {
-    constexpr std::string_view ScriptFileName = "TeraElinRaceController";
-
-    bool RegisterElinAnimation(RE::StaticFunctionTag*, RE::Actor* actor);
-
-    bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine* vm);
+    namespace Papyrus {
+        constexpr std::string_view ScriptFileName = "TeraElinRaceController";
+        RE::BSFixedString GetHeadNodeName(RE::StaticFunctionTag*, RE::Actor* actor, RE::BSFixedString FindName);
+        bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine* vm);
+    }
 }

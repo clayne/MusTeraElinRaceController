@@ -2,6 +2,8 @@
 #include "AnimationController.h"
 
 namespace Mus {
+    class MultipleConfig;
+
     class Debug {
     public:
         [[nodiscard]] inline spdlog::level::level_enum GetLogLevel() const noexcept {
@@ -55,11 +57,26 @@ namespace Mus {
         [[nodiscard]] inline  bool GetEnableEmotion() const noexcept {
             return EnableEmotion;
         }
-        [[nodiscard]] inline  std::uint8_t GetEmotionActiveLimit() const noexcept {
-            return EmotionActiveLimit;
+        [[nodiscard]] inline  bool GetEmotionEyes() const noexcept {
+            return EmotionEyes;
         }
-        [[nodiscard]] inline  clock_t GetEmotionScanCooldown() const noexcept {
-            return EmotionScanCooldown;
+        [[nodiscard]] inline  bool GetEmotionIcons() const noexcept {
+            return EmotionIcons;
+        }
+        [[nodiscard]] inline  bool GetEmotionTears() const noexcept {
+            return EmotionTears;
+        }
+        [[nodiscard]] inline  bool GetEmotionHeadOverlay() const noexcept {
+            return EmotionHeadOverlay;
+        }
+        [[nodiscard]] inline  bool GetEmotionHeadOverlayOnlyPlayer() const noexcept {
+            return EmotionHeadOverlayOnlyPlayer;
+        }
+        [[nodiscard]] inline  std::uint8_t GetEmotionEffectActiveThreshold() const noexcept {
+            return EmotionEffectActiveThreshold;
+        }
+        [[nodiscard]] inline  clock_t GetEmotionScanDelay() const noexcept {
+            return EmotionScanDelay;
         }
 
     private:
@@ -69,9 +86,13 @@ namespace Mus {
             ar <=> articuno::kv(ExceptionHeadParts, "ExceptionHeadParts");
             ar <=> articuno::kv(CompatibleHumanoidVampireLord, "CompatibleHumanoidVampireLord");
             ar <=> articuno::kv(EnableEmotion, "EnableEmotion");
-            ar <=> articuno::kv(EmotionActiveLimit, "EmotionActiveLimit");
-            EmotionActiveLimit = std::clamp(EmotionActiveLimit, (std::uint8_t)0, (std::uint8_t)100);
-            ar <=> articuno::kv(EmotionScanCooldown, "EmotionScanCooldown");
+            ar <=> articuno::kv(EmotionEyes, "EmotionEyes");
+            ar <=> articuno::kv(EmotionIcons, "EmotionIcons");
+            ar <=> articuno::kv(EmotionTears, "EmotionTears");
+            ar <=> articuno::kv(EmotionHeadOverlay, "EmotionHeadOverlay");
+            ar <=> articuno::kv(EmotionHeadOverlayOnlyPlayer, "EmotionHeadOverlayOnlyPlayer");
+            ar <=> articuno::kv(EmotionEffectActiveThreshold, "EmotionEffectActiveThreshold");
+            ar <=> articuno::kv(EmotionScanDelay, "EmotionScanDelay");
         }
 
         bool RaceController = true;
@@ -79,8 +100,13 @@ namespace Mus {
         std::string ExceptionHeadParts;
         bool CompatibleHumanoidVampireLord = true;
         bool EnableEmotion = true;
-        std::uint8_t EmotionActiveLimit = 70;
-        clock_t EmotionScanCooldown = 100;
+        bool EmotionEyes = true;
+        bool EmotionIcons = true;
+        bool EmotionTears = true;
+        bool EmotionHeadOverlay = true;
+        bool EmotionHeadOverlayOnlyPlayer = false;
+        std::uint8_t EmotionEffectActiveThreshold = 70;
+        clock_t EmotionScanDelay = 0;
 
         friend class articuno::access;
     };
@@ -134,6 +160,9 @@ namespace Mus {
 
     class EmotionControl {
     public:
+        [[nodiscard]] inline  std::uint8_t GetEmotionAnimationActiveThreshold() const noexcept {
+            return EmotionAnimationActiveThreshold;
+        }
         [[nodiscard]] inline animation_type GetDialogueAnger() const noexcept {
             return DialogueAnger;
         }
@@ -179,6 +208,7 @@ namespace Mus {
 
     private:
         articuno_serialize(ar) {
+            ar <=> articuno::kv(EmotionAnimationActiveThreshold, "EmotionAnimationActiveThreshold");
             auto _DialogueAnger = magic_enum::enum_name(DialogueAnger);
             auto _DialogueFear = magic_enum::enum_name(DialogueFear);
             auto _DialogueHappy = magic_enum::enum_name(DialogueHappy);
@@ -210,7 +240,7 @@ namespace Mus {
         }
 
         articuno_deserialize(ar) {
-            *this = EmotionControl();
+            ar <=> articuno::kv(EmotionAnimationActiveThreshold, "EmotionAnimationActiveThreshold");
             std::string _DialogueAnger;
             std::string _DialogueFear;
             std::string _DialogueHappy;
@@ -229,46 +259,47 @@ namespace Mus {
                 DialogueAnger = magic_enum::enum_cast<animation_type>(_DialogueAnger).value();
             }
             if (ar <=> articuno::kv(_DialogueFear, "DialogueFear")) {
-                DialogueFear = magic_enum::enum_cast<animation_type>(_DialogueAnger).value();
+                DialogueFear = magic_enum::enum_cast<animation_type>(_DialogueFear).value();
             }
             if (ar <=> articuno::kv(_DialogueHappy, "DialogueHappy")) {
-                DialogueHappy = magic_enum::enum_cast<animation_type>(_DialogueAnger).value();
+                DialogueHappy = magic_enum::enum_cast<animation_type>(_DialogueHappy).value();
             }
             if (ar <=> articuno::kv(_DialogueSad, "DialogueSad")) {
-                DialogueSad = magic_enum::enum_cast<animation_type>(_DialogueAnger).value();
+                DialogueSad = magic_enum::enum_cast<animation_type>(_DialogueSad).value();
             }
             if (ar <=> articuno::kv(_DialogueSurprise, "DialogueSurprise")) {
-                DialogueSurprise = magic_enum::enum_cast<animation_type>(_DialogueAnger).value();
+                DialogueSurprise = magic_enum::enum_cast<animation_type>(_DialogueSurprise).value();
             }
             if (ar <=> articuno::kv(_DialoguePuzzled, "DialoguePuzzled")) {
-                DialoguePuzzled = magic_enum::enum_cast<animation_type>(_DialogueAnger).value();
+                DialoguePuzzled = magic_enum::enum_cast<animation_type>(_DialoguePuzzled).value();
             }
             if (ar <=> articuno::kv(_DialogueDisgust, "DialogueDisgust")) {
-                DialogueDisgust = magic_enum::enum_cast<animation_type>(_DialogueAnger).value();
+                DialogueDisgust = magic_enum::enum_cast<animation_type>(_DialogueDisgust).value();
             }
             if (ar <=> articuno::kv(_MoodAnger, "MoodAnger")) {
                 MoodAnger = magic_enum::enum_cast<animation_type>(_MoodAnger).value();
             }
             if (ar <=> articuno::kv(_MoodFear, "MoodFear")) {
-                MoodFear = magic_enum::enum_cast<animation_type>(_MoodAnger).value();
+                MoodFear = magic_enum::enum_cast<animation_type>(_MoodFear).value();
             }
             if (ar <=> articuno::kv(_MoodHappy, "MoodHappy")) {
-                MoodHappy = magic_enum::enum_cast<animation_type>(_MoodAnger).value();
+                MoodHappy = magic_enum::enum_cast<animation_type>(_MoodHappy).value();
             }
             if (ar <=> articuno::kv(_MoodSad, "MoodSad")) {
-                MoodSad = magic_enum::enum_cast<animation_type>(_MoodAnger).value();
+                MoodSad = magic_enum::enum_cast<animation_type>(_MoodSad).value();
             }
             if (ar <=> articuno::kv(_MoodSurprise, "MoodSurprise")) {
-                MoodSurprise = magic_enum::enum_cast<animation_type>(_MoodAnger).value();
+                MoodSurprise = magic_enum::enum_cast<animation_type>(_MoodSurprise).value();
             }
             if (ar <=> articuno::kv(_MoodPuzzled, "MoodPuzzled")) {
-                MoodPuzzled = magic_enum::enum_cast<animation_type>(_MoodAnger).value();
+                MoodPuzzled = magic_enum::enum_cast<animation_type>(_MoodPuzzled).value();
             }
             if (ar <=> articuno::kv(_MoodDisgust, "MoodDisgust")) {
-                MoodDisgust = magic_enum::enum_cast<animation_type>(_MoodAnger).value();
+                MoodDisgust = magic_enum::enum_cast<animation_type>(_MoodDisgust).value();
             }
         }
 
+        std::uint8_t EmotionAnimationActiveThreshold = 70;
         animation_type DialogueAnger = animation_type::attention;
         animation_type DialogueFear = animation_type::droop;
         animation_type DialogueHappy = animation_type::continueAnim;
@@ -386,6 +417,64 @@ namespace Mus {
         friend class articuno::access;
     };
 
+    class Extra {
+    public:
+        [[nodiscard]] inline std::vector<RE::BSTArrayBase::size_type> GetLookupSliderIndexs() const noexcept {
+            return LookupSliderIndexs;
+        }
+        [[nodiscard]] inline std::vector<std::string> GetLookupSliderNames() const noexcept {
+            return LookupSliderNames;
+        }
+
+    private:
+        articuno_serialize(ar) {
+            std::string _LookupSliderIndexs;
+            bool IndexFirst = true;
+            for (auto& indexlist : LookupSliderNames)
+            {
+                if (!IndexFirst)
+                    _LookupSliderIndexs += "|";
+                _LookupSliderIndexs += std::to_string(indexlist);
+                IndexFirst = false;
+            }
+            ar <=> articuno::kv(_LookupSliderIndexs, "LookupSliderNames");
+
+            std::string _LookupSliderNames;
+            bool NameFirst = true;
+            for (auto& namelist : LookupSliderNames)
+            {
+                if (!NameFirst)
+                    _LookupSliderNames += "|";
+                _LookupSliderNames += namelist;
+                NameFirst = false;
+            }
+            ar <=> articuno::kv(_LookupSliderNames, "LookupSliderNames");
+        }
+
+        articuno_deserialize(ar) {
+            std::string _LookupSliderIndexs;
+            std::vector<std::string> _LookupSliderIndexlist;
+            if (ar <=> articuno::kv(_LookupSliderIndexs, "LookupSliderIndexs")) {
+                _LookupSliderIndexlist = MultipleConfig::split(_LookupSliderIndexs, '|');
+                for (auto& list : _LookupSliderIndexlist)
+                {
+                    RE::BSTArrayBase::size_type index = std::stoi(list);
+                    LookupSliderIndexs.emplace_back(index);
+                }
+            }
+            
+            std::string _LookupSliderNames;
+            if (ar <=> articuno::kv(_LookupSliderNames, "LookupSliderNames")) {
+                LookupSliderNames = MultipleConfig::split(_LookupSliderNames, '|');
+            }
+        }
+
+        std::vector<RE::BSTArrayBase::size_type> LookupSliderIndexs;
+        std::vector<std::string> LookupSliderNames;
+
+        friend class articuno::access;
+    };
+
     class Config {
     public:
         [[nodiscard]] inline const Debug& GetDebug() const noexcept {
@@ -394,6 +483,10 @@ namespace Mus {
 
         [[nodiscard]] inline const Setting& GetSetting() const noexcept { 
             return _setting;
+        }
+
+        [[nodiscard]] inline const Extra& GetExtra() const noexcept {
+            return _extra;
         }
 
         [[nodiscard]] static const Config& GetSingleton() noexcept;
@@ -406,6 +499,7 @@ namespace Mus {
 
         Debug _debug;
         Setting _setting;
+        Extra _extra;
 
         friend class articuno::access;
     };
@@ -471,6 +565,82 @@ namespace Mus {
         static inline RE::FormID getHex(std::string hexstr)
         {
             return (RE::FormID)strtoul(hexstr.c_str(), 0, 16);
+        }
+
+
+        inline std::vector<std::string> get_all_files_names_within_folder(std::string folder)
+        {
+            std::vector<std::string> names;
+
+            DIR* directory = opendir(folder.c_str());
+            struct dirent* direntStruct;
+
+            if (directory != nullptr) {
+                while (direntStruct = readdir(directory)) {
+                    names.emplace_back(direntStruct->d_name);
+                }
+            }
+            closedir(directory);
+
+            return names;
+        }
+
+        inline bool stringStartsWith(std::string str, std::string prefix)
+        {
+            // convert string to back to lower case
+            std::for_each(str.begin(), str.end(), [](char& c)
+                {
+                    c = ::tolower(c);
+                });
+            // std::string::find returns 0 if toMatch is found at starting
+            if (str.find(prefix) == 0)
+                return true;
+            else
+                return false;
+        }
+
+        inline bool stringEndsWith(std::string str, std::string const& suffix)
+        {
+            std::for_each(str.begin(), str.end(), [](char& c)
+                {
+                    c = ::tolower(c);
+                });
+            if (str.length() >= suffix.length())
+            {
+                return (0 == str.compare(str.length() - suffix.length(), suffix.length(), suffix));
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        static inline ControllerConfig GetConfigDefault()
+        {
+            ControllerConfig cc;
+            cc.FrequencyMax = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMax();
+            cc.FrequencyMin = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMin();
+            cc.AnimationEarsSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationEarsSpeed();
+            cc.AnimationTailSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationTailSpeed();
+            cc.Reversed = Config::GetSingleton().GetSetting().GetAnimation().GetReversed();
+            cc.EmotionEffectActiveThreshold = Config::GetSingleton().GetSetting().GetFeature().GetEmotionEffectActiveThreshold();
+            cc.EmotionAnimationActiveThreshold = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetEmotionAnimationActiveThreshold();
+            cc.DialogueAnger = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueAnger();
+            cc.DialogueFear = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueFear();
+            cc.DialogueHappy = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueHappy();
+            cc.DialogueSad = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueSad();
+            cc.DialogueSurprise = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueSurprise();
+            cc.DialoguePuzzled = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialoguePuzzled();
+            cc.DialogueDisgust = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetDialogueDisgust();
+            cc.MoodAnger = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodAnger();
+            cc.MoodFear = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodFear();
+            cc.MoodHappy = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodHappy();
+            cc.MoodSad = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodSad();
+            cc.MoodSurprise = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodSurprise();
+            cc.MoodPuzzled = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodPuzzled();
+            cc.MoodDisgust = Config::GetSingleton().GetSetting().GetAnimation().GetEmotionControl().GetMoodDisgust();
+
+            return cc;
         }
 
     private:

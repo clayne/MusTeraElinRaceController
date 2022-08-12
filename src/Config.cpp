@@ -70,12 +70,7 @@ namespace Mus {
 
                         std::string pluginname;
                         std::vector<RE::FormID> baseid_list;
-                        ControllerConfig cc;
-                        cc.FrequencyMax = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMax();
-                        cc.FrequencyMin = Config::GetSingleton().GetSetting().GetAnimation().GetRandomControl().GetFrequencyMin();
-                        cc.Reversed = false;
-                        cc.AnimationEarsSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationEarsSpeed();
-                        cc.AnimationTailSpeed = Config::GetSingleton().GetSetting().GetAnimation().GetAnimationTailSpeed();
+                        ControllerConfig cc = GetConfigDefault();
 
                         std::string line;
                         std::string currentSetting;
@@ -102,6 +97,10 @@ namespace Mus {
                                     {
                                         baseid_list = ConfigLineSplitterFormID(variableValue);
                                     }
+                                    else if (variableName == "EmotionEffectActiveThreshold")
+                                    {
+                                        cc.EmotionEffectActiveThreshold = GetConfigSettingsValue(line, variableName);
+                                    }
                                     else if (variableName == "FrequencyMax")
                                     {
                                         cc.FrequencyMax = GetConfigSettingsFloatValue(line, variableName);
@@ -114,9 +113,9 @@ namespace Mus {
                                     {
                                         cc.Reversed = GetConfigSettingsBoolValue(line, variableName);
                                     }
-                                    else if (variableName == "EmotionActiveLimit")
+                                    else if (variableName == "EmotionAnimationActiveThreshold")
                                     {
-                                        cc.EmotionActiveLimit = GetConfigSettingsValue(line, variableName);
+                                        cc.EmotionAnimationActiveThreshold = GetConfigSettingsValue(line, variableName);
                                     }
                                     else if (variableName == "AnimationEarsSpeed")
                                     {

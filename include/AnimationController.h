@@ -21,7 +21,8 @@ namespace Mus {
 		std::uint8_t AnimationEarsSpeed = 3;
 		std::uint8_t AnimationTailSpeed = 3;
 		bool Reversed = false;
-		std::uint8_t EmotionActiveLimit = 70;
+		std::uint8_t EmotionEffectActiveThreshold = 70;
+		std::uint8_t EmotionAnimationActiveThreshold = 70;
 		animation_type DialogueAnger = animation_type::attention;
 		animation_type DialogueFear = animation_type::droop;
 		animation_type DialogueHappy = animation_type::continueAnim;

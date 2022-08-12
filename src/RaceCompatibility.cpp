@@ -533,17 +533,11 @@ namespace Mus {
         if (!VampLordRace)
             return;
 
-        RE::TESForm* ElinRaceForm = RE::TESForm::LookupByID(RunTimeTeraElinRaceFormID);
-        if (!ElinRaceForm)
-            return;
-        RE::TESRace* ElinRace = reinterpret_cast<RE::TESRace*>(ElinRaceForm);
+        RE::TESRace* ElinRace = GetElinRace(false);
         if (!ElinRace)
             return;
-
-        RE::TESForm* DefaultRaceForm = RE::TESForm::LookupByID(DefaultRaceID);
-        if (!DefaultRaceForm)
-            return;
-        RE::TESRace* DefaultRace = reinterpret_cast<RE::TESRace*>(DefaultRaceForm);
+        
+        RE::TESRace* DefaultRace = GetElinRace(true);
         if (!DefaultRace)
             return;
 

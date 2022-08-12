@@ -1,28 +1,18 @@
 #include "HookEvent.h"
 
 namespace Mus {
-	void EventHandler::Register(bool isLoaded)
+	void EventHandler::Register()
 	{
-		if (!isLoaded)
-		{
-			if (const auto Menu = RE::UI::GetSingleton()) {
-				logger::info("Sinking menu events...");
-				Menu->AddEventSink<RE::MenuOpenCloseEvent>(this);
-			}
-
-			if (const auto EventHolder = RE::ScriptEventSourceHolder::GetSingleton()) {
-				logger::info("Sinking load/switch events...");
-				EventHolder->AddEventSink<RE::TESLoadGameEvent>(this);
-				EventHolder->AddEventSink<RE::TESObjectLoadedEvent>(this);
-				EventHolder->AddEventSink<RE::TESSwitchRaceCompleteEvent>(this);
-			}
+		if (const auto Menu = RE::UI::GetSingleton()) {
+			logger::info("Sinking menu events...");
+			Menu->AddEventSink<RE::MenuOpenCloseEvent>(this);
 		}
-		else
-		{
-			if (const auto Device = RE::BSInputDeviceManager::GetSingleton()) {
-				logger::info("Sinking device events...");
-				Device->AddEventSink(InputEventHandler::GetSingleton());
-			}
+
+		if (const auto EventHolder = RE::ScriptEventSourceHolder::GetSingleton()) {
+			logger::info("Sinking load/switch events...");
+			EventHolder->AddEventSink<RE::TESLoadGameEvent>(this);
+			EventHolder->AddEventSink<RE::TESObjectLoadedEvent>(this);
+			EventHolder->AddEventSink<RE::TESSwitchRaceCompleteEvent>(this);
 		}
 	}
 
@@ -51,9 +41,12 @@ namespace Mus {
 			logger::trace("Detected RaceSex Menu");
 			IsRaceSexMenu.store(true);
 			IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
-			g_frameEventDispatcher.addListener(&PlayerGenderDetector::GetSingleton());
+			//g_frameEventDispatcher.addListener(&PlayerGenderDetector::GetSingleton());
+			//RaceSexMenuTracker::GetSingleton().DebugSliderPrint();
+			//RaceSexMenuTracker::GetSingleton().InitTrackingList();
+			//g_frameEventDispatcher.addListener(&RaceSexMenuTracker::GetSingleton());
 		}
-	};
+	}
 
 	void EventHandler::MenuClosed(std::string name)
 	{
@@ -67,13 +60,14 @@ namespace Mus {
 			IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
 			g_frameEventDispatcher.removeListener(&PlayerGenderDetector::GetSingleton());
 			ActorManager::GetSingleton().UpdatePlayerFaceNodes();
+			//g_frameEventDispatcher.removeListener(&RaceSexMenuTracker::GetSingleton());
 		}
-	};
+	}
 
 	EventResult EventHandler::ProcessEvent(const RE::TESLoadGameEvent* evn, RE::BSTEventSource<RE::TESLoadGameEvent>*) 
 	{
 		logger::debug("Detected Load Game Event");
-		Register(true);
+		//InputEventHandler::GetSingleton()->Register();
 		RaceCompatibility::GetSingleton().LoadRaceCompatibility();
 		RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
 		RaceCompatibility::GetSingleton().SolveCompatibleVampireLord();
@@ -81,10 +75,6 @@ namespace Mus {
 		if (!ActorManager::GetSingleton().RegisterPlayer())
 		{
 			logger::error("Failed register player on ElinAnimation");
-		}
-		else
-		{
-			ActorManager::GetSingleton().ChangerPlayerState();
 		}
 
 		return EventResult::kContinue;
@@ -95,9 +85,6 @@ namespace Mus {
 		if (!evn)
 			return EventResult::kContinue;	
 		
-		if (!evn->loaded)
-			return EventResult::kContinue;
-			
 		RE::TESForm* obj = RE::TESForm::LookupByID(evn->formID);
 		if (!obj || obj->IsNot(RE::FormType::ActorCharacter))
 			return EventResult::kContinue;
@@ -107,7 +94,7 @@ namespace Mus {
 		if (!actor)
 			return EventResult::kContinue;
 
-		static auto& am = ActorManager::GetSingleton();
+		auto& am = ActorManager::GetSingleton();
 		am.TrackingActors(actor);
 
 		return EventResult::kContinue;
@@ -139,18 +126,33 @@ namespace Mus {
 				{
 					logger::error("Failed register player on ElinAnimation");
 				}
-				else
-				{
-					ActorManager::GetSingleton().ChangerPlayerState();
-				}
 			}
 		}
 
 		return EventResult::kContinue;
 	}
-	/*
-	EventResult EventHandler::ProcessEvent(const RE::InputEvent* evn, RE::BSTEventSource<RE::InputEvent>*)
+
+
+	
+	void InputEventHandler::Register()
 	{
+		if (const auto Device = RE::BSInputDeviceManager::GetSingleton()) {
+			logger::info("Sinking device events...");
+			Device->AddEventSink(this);
+		}
+	}
+
+	EventResult InputEventHandler::ProcessEvent(const RE::InputEvent*& evn, RE::BSTEventSource<RE::InputEvent*>*) {
+		if (isFirstRun)
+		{
+			EarLKey = Config::GetSingleton().GetSetting().GetAnimation().GetDirectControl().GetLEarHotkey();
+			EarRKey = Config::GetSingleton().GetSetting().GetAnimation().GetDirectControl().GetREarHotkey();
+			TailKey = Config::GetSingleton().GetSetting().GetAnimation().GetDirectControl().GetTailHotKey();
+			isFirstRun = false;
+		}
+
+		logger::debug("InputEvent");
+
 		if (!evn)
 			return EventResult::kContinue;
 
@@ -173,7 +175,7 @@ namespace Mus {
 				PressTailKey.store(true);
 			}
 
-			logger::trace("Press Button Event : {}", button->GetIDCode());
+			logger::debug("Press Button Event : {}", button->GetIDCode());
 		}
 		else
 		{
@@ -190,10 +192,9 @@ namespace Mus {
 				PressTailKey.store(false);
 			}
 
-			logger::trace("Unpress Button Event : {}", button->GetIDCode());
+			logger::debug("Unpress Button Event : {}", button->GetIDCode());
 		}
 
 		return EventResult::kContinue;
 	}
-	*/
 }

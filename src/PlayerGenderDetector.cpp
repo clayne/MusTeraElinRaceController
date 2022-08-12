@@ -31,7 +31,6 @@ namespace Mus {
 
 				modEvent->SendEvent(&genderEvent);
 			}
-			
 		}
 
 		PlayerFemale = CurrentSex;

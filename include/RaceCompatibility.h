@@ -38,6 +38,23 @@ namespace Mus {
         bool GetRuntimeData();
         void SolveCompatibleVampire();
         void SolveCompatibleVampireLord();
+
+        inline RE::TESRace* GetElinRace(bool isVamp) {
+            RE::TESRace* result = nullptr;
+            if (!isVamp)
+            {
+                RE::TESForm* ElinRaceForm = RE::TESForm::LookupByID(RunTimeTeraElinRaceFormID);
+                if (ElinRaceForm)
+                    result = reinterpret_cast<RE::TESRace*>(ElinRaceForm);
+            }
+            else
+            {
+                RE::TESForm* ElinRaceVampForm = RE::TESForm::LookupByID(RunTimeTeraElinRaceVampFormID);
+                if (ElinRaceVampForm)
+                    result = reinterpret_cast<RE::TESRace*>(ElinRaceVampForm);
+            }
+            return result;
+        }
     private:
         bool isInitFormList = false;
         bool IsProblem = false;
@@ -108,8 +125,6 @@ namespace Mus {
         const std::string_view NoMoreUglyVampireLordESP = "NoMoreUglyVampireLord.esp";
         const std::string_view NoMoreUglyVampireLord2RVESP = "NoMoreUglyVampireLord_2RV.esp";
         const RE::FormID VampireLordRaceID = 0x0200283A;
-
-        
     };
 
 }  // namespace Mus
