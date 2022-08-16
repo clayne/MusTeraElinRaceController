@@ -6,7 +6,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         MusTeraElinRaceController
-        VERSION 1.1.0
+        VERSION 1.1.1
         DESCRIPTION "TeraElinRace Feature Controller by Acro."
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)

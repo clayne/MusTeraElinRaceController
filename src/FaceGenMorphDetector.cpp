@@ -8,14 +8,14 @@ namespace Mus
 		, name(actor->GetDisplayFullName()) {
 
 		beforeTime = clock();
-		cooldown = Config::GetSingleton().GetSetting().GetFeature().GetEmotionScanDelay();
+		cooldown = Config::GetSingleton().GetEmotionScanDelay();
 		ActiveThreshold = EmotionEffectActiveThreshold;
-		isEnable = Config::GetSingleton().GetSetting().GetFeature().GetEnableEmotion();
-		isEyes = Config::GetSingleton().GetSetting().GetFeature().GetEmotionEyes();
-		isIcons = Config::GetSingleton().GetSetting().GetFeature().GetEmotionIcons();
-		isTears = Config::GetSingleton().GetSetting().GetFeature().GetEmotionTears();
-		isOverlay = Config::GetSingleton().GetSetting().GetFeature().GetEmotionHeadOverlay();
-		isPlayerOnly = Config::GetSingleton().GetSetting().GetFeature().GetEmotionHeadOverlayOnlyPlayer();
+		isEnable = Config::GetSingleton().GetEnableEmotion();
+		isEyes = Config::GetSingleton().GetEmotionEyes();
+		isIcons = Config::GetSingleton().GetEmotionIcons();
+		isTears = Config::GetSingleton().GetEmotionTears();
+		isOverlay = Config::GetSingleton().GetEmotionHeadOverlay();
+		isPlayerOnly = Config::GetSingleton().GetEmotionHeadOverlayOnlyPlayer();
 
 		if (!isPlayer(id))
 		{
@@ -202,7 +202,7 @@ namespace Mus
 
 		logger::trace("{:x} {} : try set alpha of the face node...", id, name);
 
-		RE::BSGeometry* a_geometry = reinterpret_cast<RE::BSGeometry*>(obj);
+		RE::BSGeometry* a_geometry = static_cast<RE::BSGeometry*>(obj);
 		
 		using State = RE::BSGeometry::States;
 
@@ -228,7 +228,7 @@ namespace Mus
 		if (!obj)
 			return false;
 
-		RE::BSGeometry* a_geometry = reinterpret_cast<RE::BSGeometry*>(obj);
+		RE::BSGeometry* a_geometry = static_cast<RE::BSGeometry*>(obj);
 
 		using State = RE::BSGeometry::States;
 
@@ -254,7 +254,7 @@ namespace Mus
 
 		logger::trace("{:x} {} : fix alpha property issue...", id, name);
 
-		RE::BSGeometry* a_geometry = reinterpret_cast<RE::BSGeometry*>(obj);
+		RE::BSGeometry* a_geometry = static_cast<RE::BSGeometry*>(obj);
 		
 		using State = RE::BSGeometry::States;
 
@@ -424,10 +424,10 @@ namespace Mus
 			return false;
 		}
 
-		std::vector<RE::BSTArrayBase::size_type> indexlist = Config::GetSingleton().GetExtra().GetLookupSliderIndexs();
+		std::vector<RE::BSTArrayBase::size_type> indexlist = Config::GetSingleton().GetLookupSliderIndexs();
 		AddSliderIndexOnLookupSliderMap(indexlist);
 
-		std::vector<std::string> slidernames = Config::GetSingleton().GetExtra().GetLookupSliderNames();
+		std::vector<std::string> slidernames = Config::GetSingleton().GetLookupSliderNames();
 		AddSliderNamesOnLookupSliderMap(slidernames);
 		
 		return true;
@@ -696,7 +696,7 @@ namespace Mus
 
 	void RaceSexMenuTracker::DebugSliderPrint()
 	{
-		if (std::to_underlying(Config::GetSingleton().GetDebug().GetLogLevel()) > std::to_underlying(spdlog::level::level_enum::debug))
+		if (std::to_underlying(Config::GetSingleton().GetLogLevel()) > std::to_underlying(spdlog::level::level_enum::debug))
 			return; //print only debug / trace
 
 		auto Player = RE::PlayerCharacter::GetSingleton();

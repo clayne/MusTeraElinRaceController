@@ -20,13 +20,7 @@ namespace {
      */
     void InitializeLogging() 
     {
-        char RuntimeDirectory[4096];
-        if (_getcwd(RuntimeDirectory, 4096) == NULL)
-        {
-            report_and_fail("Unable to lookup Runtime directory.");
-        }
-        std::string LogDirectory = RuntimeDirectory;
-        LogDirectory += "\\Data\\SKSE\\Plugins\\";
+        std::string LogDirectory = GetRuntimeDirectory();
         
         std::optional<std::filesystem::path> path(LogDirectory);
         *path /= PluginDeclaration::GetSingleton()->GetName();
@@ -43,9 +37,9 @@ namespace {
             log = std::make_shared<spdlog::logger>(
                 "Global", std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true));
         }
-        const auto& debugConfig = Config::GetSingleton().GetDebug();
-        log->set_level(debugConfig.GetLogLevel());
-        log->flush_on(debugConfig.GetFlushLevel());
+
+        log->set_level(Config::GetSingleton().GetLogLevel());
+        log->flush_on(Config::GetSingleton().GetFlushLevel());
 
         spdlog::set_default_logger(std::move(log));
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
@@ -136,6 +130,7 @@ namespace {
         RaceCompatibility::GetSingleton().GetRuntimeData();
         RaceCompatibility::GetSingleton().InitFormList();
         RaceCompatibility::GetSingleton().SolveCompatibleVampire();
+        RaceCompatibility::GetSingleton().ChangeRaceHeight();
         MultipleConfig mc;
         mc.LoadElinAnimationConfig();
     }
@@ -195,6 +190,7 @@ namespace {
 
 SKSEPluginLoad(const LoadInterface* skse) 
 {
+    Config::GetSingleton().LoadConfig();
     InitializeLogging();
 
     auto* plugin = PluginDeclaration::GetSingleton();

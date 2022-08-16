@@ -13,9 +13,9 @@ namespace Mus {
 
 	void ActorManager::onEvent(const FrameEvent& e)
 	{
-		//logger::trace("work onevent");
+		//logger::error("work onevent");
 		const auto menu = RE::UI::GetSingleton();
-		if (((e.gamePaused || menu->numPausesGame > 0) && !IsRaceSexMenu.load()) || IsMainMenu.load())
+		if (((e.gamePaused || (menu && menu->numPausesGame > 0)) && !IsRaceSexMenu.load()) || IsMainMenu.load())
 			return;
 
 		if (!IsValidTeraElinRace ||
@@ -30,7 +30,7 @@ namespace Mus {
 	{
 		const float IntervalTimeTick = GetFrameIntervalTimeTick();
 		concurrency::parallel_for_each(ActorMap.begin(), ActorMap.end(), [&](auto& map) {
-			RE::Actor* actor = reinterpret_cast<RE::Actor*>(RE::TESForm::LookupByID(map.first));
+			RE::Actor* actor = static_cast<RE::Actor*>(RE::TESForm::LookupByID(map.first));
 			if (actor)
 			{
 				if (isPlayer(actor->formID))
@@ -52,7 +52,7 @@ namespace Mus {
 	void ActorManager::ControllFacegenActors()
 	{
 		concurrency::parallel_for_each(FaceGenDataMap.begin(), FaceGenDataMap.end(), [&](auto& map) {
-			RE::Actor* actor = reinterpret_cast<RE::Actor*>(RE::TESForm::LookupByID(map.first));
+			RE::Actor* actor = static_cast<RE::Actor*>(RE::TESForm::LookupByID(map.first));
 			if (actor)
 			{
 				if (isPlayer(actor->formID))
@@ -111,11 +111,11 @@ namespace Mus {
 		if (ActorMap.find(actor->formID) != ActorMap.end())
 			return true;
 
-		if (!Config::GetSingleton().GetSetting().GetAnimation().GetElinAnimation())
+		if (!Config::GetSingleton().GetElinAnimation())
 			return false;
-		if ((isPlayer(actor->formID)) && !Config::GetSingleton().GetSetting().GetAnimation().GetEnablePlayer())
+		if ((isPlayer(actor->formID)) && !Config::GetSingleton().GetEnablePlayer())
 			return false;
-		else if (!isPlayer(actor->formID) && !Config::GetSingleton().GetSetting().GetAnimation().GetEnableNPCs())
+		else if (!isPlayer(actor->formID) && !Config::GetSingleton().GetEnableNPCs())
 			return false;
 		auto controller = AnimationController(actor, config);
 		ActorMap.insert(std::make_pair(actor->formID, controller));
@@ -132,9 +132,9 @@ namespace Mus {
 		if (FaceGenDataMap.find(actor->formID) != FaceGenDataMap.end())
 			return true;
 		
-		if (!Config::GetSingleton().GetSetting().GetFeature().GetEmotionHeadOverlay())
+		if (!Config::GetSingleton().GetEmotionHeadOverlay())
 			return false;
-		if (!isPlayer(actor->formID) && Config::GetSingleton().GetSetting().GetFeature().GetEmotionHeadOverlayOnlyPlayer())
+		if (!isPlayer(actor->formID) && Config::GetSingleton().GetEmotionHeadOverlayOnlyPlayer())
 			return false;
 		auto facegendetector = FaceGenMorphDetector(actor, config.EmotionEffectActiveThreshold);
 		FaceGenDataMap.insert(std::make_pair(actor->formID, facegendetector));

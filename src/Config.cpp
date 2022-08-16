@@ -7,25 +7,240 @@ using namespace articuno::ryml;
 using namespace Mus;
 
 namespace Mus {
-    bool AnimController = true;
-    bool RaceController = true;
+    bool Config::LoadConfig() {
+        std::string configPath = GetRuntimeDirectory();
+        configPath += "MusTeraElinRaceController.ini";
 
-    const Config& Config::GetSingleton() noexcept {
-        static Config instance;
+        std::ifstream file(configPath);
 
-        static std::atomic_bool initialized;
-        static std::latch latch(1);
-        if (!initialized.exchange(true)) {
-            std::ifstream inputFile(R"(Data\SKSE\Plugins\MusTeraElinRaceController.yaml)");
-            if (inputFile.good()) {
-                yaml_source ar(inputFile);
-                ar >> instance;
-            }
-            latch.count_down();
+        if (!file.is_open())
+        {
+            std::transform(configPath.begin(), configPath.end(), configPath.begin(), ::tolower);
+            file.open(configPath);
         }
-        latch.wait();
 
-        return instance;
+        if (!file.is_open())
+        {
+            SKSE::stl::report_and_fail("Unable to load Config file.");
+            return false;
+        }
+
+        std::string line;
+        std::string currentSetting;
+        while (std::getline(file, line))
+        {
+            //trim(line);
+            skipComments(line);
+            trim(line);
+            if (line.length() > 0)
+            {
+                if (line.substr(0, 1) == "[")
+                {
+                    currentSetting = line;
+                }
+                else
+                {
+                    std::string variableName;
+                    std::string variableValue = GetConfigSettingsStringValue(line, variableName);
+                    if (currentSetting == "[Debug]")
+                    {
+                        if (variableName == "logLevel")
+                        {
+                            logLevel = spdlog::level::from_str(variableValue);
+                        }
+                        if (variableName == "flushLevel")
+                        {
+                            flushLevel = spdlog::level::from_str(variableValue);
+                        }
+                    }
+                    else if (currentSetting == "[Feature]")
+                    {
+                        if (variableName == "RaceController")
+                        {
+                            RaceController = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "BeforeSaveCompatible")
+                        {
+                            BeforeSaveCompatible = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "ExceptionHeadParts")
+                        {
+                            ExceptionHeadParts = split(variableValue, '|');
+                        }
+                        else if (variableName == "CompatibleHumanoidVampireLord")
+                        {
+                            CompatibleHumanoidVampireLord = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "EnableEmotion")
+                        {
+                            EnableEmotion = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "EmotionEyes")
+                        {
+                            EmotionEyes = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "EmotionIcons")
+                        {
+                            EmotionIcons = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "EmotionHeadOverlay")
+                        {
+                            EmotionHeadOverlay = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "EmotionHeadOverlayOnlyPlayer")
+                        {
+                            EmotionHeadOverlayOnlyPlayer = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "EmotionEffectActiveThreshold")
+                        {
+                            EmotionEffectActiveThreshold = GetConfigSettingsIntValue(line, variableName);
+                        }
+                        else if (variableName == "EmotionScanDelay")
+                        {
+                            EmotionScanDelay = GetConfigSettingsIntValue(line, variableName);
+                        }
+                    }
+                    else if (currentSetting == "[Animation]")
+                    {
+                        if (variableName == "ElinAnimation")
+                        {
+                            ElinAnimation = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "DisableOnRaceSexMenu")
+                        {
+                            DisableOnRaceSexMenu = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "EnablePlayer")
+                        {
+                            EnablePlayer = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "EnableNPCs")
+                        {
+                            EnableNPCs = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                        else if (variableName == "AnimationEarsSpeed")
+                        {
+                            AnimationEarsSpeed = GetConfigSettingsIntValue(line, variableName);
+                        }
+                        else if (variableName == "AnimationTailSpeed")
+                        {
+                            AnimationTailSpeed = GetConfigSettingsIntValue(line, variableName);
+                        }
+                        else if (variableName == "Reversed")
+                        {
+                            Reversed = GetConfigSettingsBoolValue(line, variableName);
+                        }
+                    }
+                    else if (currentSetting == "[DirectControll]")
+                    {
+                        if (variableName == "LEarHotkey")
+                        {
+                            LEarHotkey = GetConfigSettingsIntValue(line, variableName);
+                        }
+                        else if (variableName == "REarHotkey")
+                        {
+                            REarHotkey = GetConfigSettingsIntValue(line, variableName);
+                        }
+                        else if (variableName == "TailHotkey")
+                        {
+                            TailHotkey = GetConfigSettingsIntValue(line, variableName);
+                        }
+                    }
+                    else if (currentSetting == "[RandomeControll]")
+                    {
+                        if (variableName == "FrequencyMax")
+                        {
+                            FrequencyMax = GetConfigSettingsIntValue(line, variableName);
+                        }
+                        else if (variableName == "FrequencyMin")
+                        {
+                            FrequencyMin = GetConfigSettingsIntValue(line, variableName);
+                        }
+                    }
+                    else if (currentSetting == "[EmotionControll]")
+                    {
+                        if (variableName == "EmotionAnimationActiveThreshold")
+                        {
+                            EmotionAnimationActiveThreshold = GetConfigSettingsIntValue(line, variableName);
+                        }
+                        else if (variableName == "DialogueAnger")
+                        {
+                            DialogueAnger = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "DialogueFear")
+                        {
+                            DialogueFear = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "DialogueHappy")
+                        {
+                            DialogueHappy = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "DialogueSad")
+                        {
+                            DialogueSad = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "DialogueSurprise")
+                        {
+                            DialogueSurprise = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "DialoguePuzzled")
+                        {
+                            DialoguePuzzled = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "DialogueDisgust")
+                        {
+                            DialogueDisgust = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "MoodAnger")
+                        {
+                            MoodAnger = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "MoodFear")
+                        {
+                            MoodFear = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "MoodHappy")
+                        {
+                            MoodHappy = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "MoodSad")
+                        {
+                            MoodSad = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "MoodSurprise")
+                        {
+                            MoodSurprise = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "MoodPuzzled")
+                        {
+                            MoodPuzzled = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                        else if (variableName == "MoodDisgust")
+                        {
+                            MoodDisgust = magic_enum::enum_cast<animation_type>(line).value();
+                        }
+                    }
+                    else if (currentSetting == "[Extra]")
+                    {
+                        if (variableName == "LookupSliderIndexs")
+                        {
+                            std::vector<std::string> _LookupSliderIndexlist = split(variableValue, '|');
+                            for (auto& list : _LookupSliderIndexlist)
+                            {
+                                RE::BSTArrayBase::size_type index = std::stoi(list);
+                                LookupSliderIndexs.emplace_back(index);
+                            }
+                        }
+                        else if (variableName == "LookupSliderNames")
+                        {
+                            LookupSliderNames = split(variableValue, '|');
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
 
@@ -99,7 +314,7 @@ namespace Mus {
                                     }
                                     else if (variableName == "EmotionEffectActiveThreshold")
                                     {
-                                        cc.EmotionEffectActiveThreshold = GetConfigSettingsValue(line, variableName);
+                                        cc.EmotionEffectActiveThreshold = GetConfigSettingsIntValue(line, variableName);
                                     }
                                     else if (variableName == "FrequencyMax")
                                     {
@@ -115,15 +330,15 @@ namespace Mus {
                                     }
                                     else if (variableName == "EmotionAnimationActiveThreshold")
                                     {
-                                        cc.EmotionAnimationActiveThreshold = GetConfigSettingsValue(line, variableName);
+                                        cc.EmotionAnimationActiveThreshold = GetConfigSettingsIntValue(line, variableName);
                                     }
                                     else if (variableName == "AnimationEarsSpeed")
                                     {
-                                        cc.AnimationEarsSpeed = GetConfigSettingsValue(line, variableName);
+                                        cc.AnimationEarsSpeed = GetConfigSettingsIntValue(line, variableName);
                                     }
                                     else if (variableName == "AnimationTailSpeed")
                                     {
-                                        cc.AnimationTailSpeed = GetConfigSettingsValue(line, variableName);
+                                        cc.AnimationTailSpeed = GetConfigSettingsIntValue(line, variableName);
                                     }
                                     else if (variableName == "DialogueAnger")
                                     {
@@ -190,103 +405,6 @@ namespace Mus {
             }
         });
         return true;
-    }
-
-    int MultipleConfig::GetConfigSettingsValue(std::string line, std::string& variable) 
-    {
-        int value = 0;
-        std::vector<std::string> splittedLine = split(line, '=');
-        variable = "";
-        if (splittedLine.size() > 1)
-        {
-            variable = splittedLine[0];
-            trim(variable);
-
-            std::string valuestr = splittedLine[1];
-            trim(valuestr);
-            value = std::stoi(valuestr);
-        }
-        return value;
-    }
-
-    float MultipleConfig::GetConfigSettingsFloatValue(std::string line, std::string& variable)
-    {
-        float value = 0;
-        std::vector<std::string> splittedLine = split(line, '=');
-        variable = "";
-        if (splittedLine.size() > 1)
-        {
-            variable = splittedLine[0];
-            trim(variable);
-
-            std::string valuestr = splittedLine[1];
-            trim(valuestr);
-            value = strtof(valuestr.c_str(), 0);
-        }
-        return value;
-    }
-
-    bool MultipleConfig::GetConfigSettingsBoolValue(std::string line, std::string& variable)
-    {
-        bool value = false;
-        std::vector<std::string> splittedLine = split(line, '=');
-        variable = "";
-        if (splittedLine.size() > 1)
-        {
-            variable = splittedLine[0];
-            trim(variable);
-
-            std::string valuestr = splittedLine[1];
-            trim(valuestr);
-            value = (_stricmp(variable.c_str(), "true") == 0);
-        }
-        return value;
-    }
-
-    std::string MultipleConfig::GetConfigSettingsStringValue(std::string line, std::string& variable)
-    {
-        std::string value = "";
-        std::vector<std::string> splittedLine = split(line, '=');
-        variable = "";
-        if (splittedLine.size() > 1)
-        {
-            variable = splittedLine[0];
-            trim(variable);
-
-            std::string valuestr = splittedLine[1];
-            trim(valuestr);
-            value = valuestr;
-        }
-        return value;
-    }
-
-    RE::FormID MultipleConfig::GetConfigSettingsFormIDValue(std::string line, std::string& variable)
-    {
-       RE::FormID value;
-        std::vector<std::string> splittedLine = split(line, '=');
-        variable = "";
-        if (splittedLine.size() > 1)
-        {
-            variable = splittedLine[0];
-            trim(variable);
-
-            std::string valuestr = splittedLine[1];
-            trim(valuestr);
-            value = getHex(valuestr.c_str());
-        }
-        return value;
-    }
-
-    std::vector<RE::FormID> MultipleConfig::ConfigLineSplitterFormID(std::string& line)
-    {
-        std::vector<std::string> SplittedFormID = split(line, '|');
-        std::vector<RE::FormID> value;
-        for (size_t index = 0; index < SplittedFormID.size(); index++)
-        {
-            trim(SplittedFormID[index]);
-            value.emplace_back(getHex(SplittedFormID[index].c_str()));
-        }
-        return value;
     }
 }
 

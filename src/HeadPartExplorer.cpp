@@ -18,7 +18,7 @@ namespace Mus {
             if (items[index]) 
             {
                 RE::FormID formID = items[index]->formID;
-                RE::BGSHeadPart* data = reinterpret_cast<RE::BGSHeadPart*>(items[index]);
+                RE::BGSHeadPart* data = static_cast<RE::BGSHeadPart*>(items[index]);
 
                 if (data && IsPlayerble(data->flags)) {
                     if (!data->validRaces && !IsHairPart(data->type))
@@ -33,7 +33,7 @@ namespace Mus {
                             HeadPartFormMap.insert(std::make_pair(formID, data));
                             logger::trace("found and insert {} {} {:x} hair {}on formmap", GetModNameByID(formID), data->formEditorID.c_str(), formID, (data->IsExtraPart() ? "extra " : ""));
                         }
-                        else if (Config::GetSingleton().GetSetting().GetFeature().GetRaceController() && Config::GetSingleton().GetSetting().GetFeature().GetBeforeSaveCompatible())
+                        else if (Config::GetSingleton().GetRaceController() && Config::GetSingleton().GetBeforeSaveCompatible())
                         {
                             if (IsForKhajiitRace(data->validRaces->forms))
                             {
@@ -62,27 +62,22 @@ namespace Mus {
     void HeadPartExplorer::GetHeadPartConfig()
     {
         logger::info("Get Exception Head Parts...");
-        std::string list = Config::GetSingleton().GetSetting().GetFeature().GetExceptionHeadParts();
+        std::vector<std::string> list = Config::GetSingleton().GetExceptionHeadParts();
 
-        MultipleConfig::skipComments(list);
-        MultipleConfig::trim(list);
-
-        std::vector<std::string> splitlist = MultipleConfig::split(list, '|');
-
-        for (std::size_t index = 0; index < splitlist.size(); index++)
+        for (std::size_t index = 0; index < list.size(); index++)
         {
-            logger::trace("Set {} on Exception Head Part", splitlist[index]);
-            if (splitlist[index] == "EyeBrows")
+            logger::trace("Set {} on Exception Head Part", list[index]);
+            if (list[index] == "EyeBrows")
                 EyeBrows = true;
-            else if (splitlist[index] == "Eyes")
+            else if (list[index] == "Eyes")
                 Eyes = true;
-            else if (splitlist[index] == "Face")
+            else if (list[index] == "Face")
                 Face = true;
-            else if (splitlist[index] == "FacialHair")
+            else if (list[index] == "FacialHair")
                 FacialHair = true;
-            else if (splitlist[index] == "Scar")
+            else if (list[index] == "Scar")
                 Scar = true;
-            else if (splitlist[index] == "Misc")
+            else if (list[index] == "Misc")
                 Misc = true;
         }
     }

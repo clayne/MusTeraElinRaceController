@@ -3,7 +3,7 @@
 namespace Mus {
     bool RaceCompatibility::RaceController() 
     { 
-        IsPlayerElin.store(isPlayerRaceTeraElin());
+        IsPlayerElin.store(isPlayerRaceTeraElinHumanoidVampireLord());
 
         if (!IsPlayerElin.load()) return false;
 
@@ -15,7 +15,7 @@ namespace Mus {
     {
         logger::trace("Building RuntimeData...");
 
-        RunTimeHeadPartFormList = reinterpret_cast<RE::BGSListForm*>(RE::TESForm::LookupByID(HeadPartFormList));
+        RunTimeHeadPartFormList = static_cast<RE::BGSListForm*>(RE::TESForm::LookupByID(HeadPartFormList));
         if (!RunTimeHeadPartFormList) 
         {
             logger::error("Can't Find HeadPartFormList");
@@ -50,7 +50,7 @@ namespace Mus {
             IsProblem = true;
             return false;
         }
-        RunTimePlayableFormList = reinterpret_cast<RE::BGSListForm*>(RunTimePlayableForm);
+        RunTimePlayableFormList = static_cast<RE::BGSListForm*>(RunTimePlayableForm);
 
         RE::TESForm* RunTimePlayableVampForm = GetFormByID(PlayableVampFormList, RaceCompatibilityESP);
         if (!RunTimePlayableVampForm)
@@ -59,7 +59,7 @@ namespace Mus {
             IsProblem = true;
             return false;
         }
-        RunTimePlayableVampFormList = reinterpret_cast<RE::BGSListForm*>(RunTimePlayableVampForm);
+        RunTimePlayableVampFormList = static_cast<RE::BGSListForm*>(RunTimePlayableVampForm);
 
         logger::trace("Building RuntimeData finished");
 
@@ -84,6 +84,28 @@ namespace Mus {
         return false;
     }
 
+    bool RaceCompatibility::isPlayerRaceTeraElinHumanoidVampireLord()
+    {
+        if (IsProblem)
+            return false;
+
+        if (!IsThereTheESP(HumanoidVampireLordESP) && !IsThereTheESP(NoMoreUglyVampireLordESP) && !IsThereTheESP(NoMoreUglyVampireLord2RVESP))
+            return isPlayerRaceTeraElin();
+
+        RE::PlayerCharacter* P = RE::PlayerCharacter::GetSingleton();
+
+        if (!P)
+            return false;
+
+        if (IsPlayerElin.load() && P->GetActorBase()->GetRace()->formID == VampireLordRaceID)
+        {
+            logger::info("Detected that Player Race is TeraElinRace but now Vampire lord");
+            return true;
+        }
+
+        return isPlayerRaceTeraElin();
+    }
+
     bool RaceCompatibility::CreateHeadPartFormList()
     {
         logger::trace("Creating NewHeadPartFormList...");
@@ -94,7 +116,7 @@ namespace Mus {
         if (!RunTimeHeadPartFormList->formType.all(RE::FormType::FormList)) 
             return false;
 
-        if (!(CompatibleHeadPartRaces = reinterpret_cast<RE::BGSListForm*>(RunTimeHeadPartFormList->CreateDuplicateForm(true, (void*)CompatibleHeadPartRaces))))
+        if (!(CompatibleHeadPartRaces = static_cast<RE::BGSListForm*>(RunTimeHeadPartFormList->CreateDuplicateForm(true, (void*)CompatibleHeadPartRaces))))
             return false;
 
         CompatibleHeadPartRaces->SetFormEditorID("CompatibleHeadPartRaces");
@@ -270,7 +292,7 @@ namespace Mus {
         if (!IsThereTheESP(HumanoidVampireLordESP) && !IsThereTheESP(NoMoreUglyVampireLordESP) && !IsThereTheESP(NoMoreUglyVampireLord2RVESP))
             return;
 
-        RE::TESForm* VampireLordForm = RE::TESForm::LookupByID(VampireLordID);
+        RE::TESForm* VampireLordForm = RE::TESForm::LookupByID(VampireLordRaceID);
 
         if (VampireLordForm)
         {
@@ -284,7 +306,7 @@ namespace Mus {
         if (IsProblem)
             return false;
 
-        if (!Config::GetSingleton().GetSetting().GetFeature().GetBeforeSaveCompatible() || !Config::GetSingleton().GetSetting().GetFeature().GetRaceController() || !IsPlayerElin.load())
+        if (!Config::GetSingleton().GetBeforeSaveCompatible() || !Config::GetSingleton().GetRaceController() || !IsPlayerElin.load())
             return false;
 
         auto& HPE = HeadPartExplorer::GetSingleton();
@@ -435,7 +457,7 @@ namespace Mus {
         RE::TESForm* ElinRaceListForm = RE::TESForm::LookupByID(RunTimeTeraElinRaceFormListID);
         if (ElinRaceListForm)
         {
-            RE::BGSListForm* ElinRaceList = reinterpret_cast<RE::BGSListForm*>(ElinRaceListForm);
+            RE::BGSListForm* ElinRaceList = static_cast<RE::BGSListForm*>(ElinRaceListForm);
             if (ElinRaceList)
             {
                 AddHeadPartVampireLordForm(ElinRaceList);
@@ -452,7 +474,7 @@ namespace Mus {
         if (IsProblem)
             return;
 
-        if (!Config::GetSingleton().GetSetting().GetFeature().GetRaceController() || !IsValidTeraElinRace)
+        if (!Config::GetSingleton().GetRaceController() || !IsValidTeraElinRace)
         {
             logger::info("Disabled Race Compatibility Controller");
             return;
@@ -483,8 +505,8 @@ namespace Mus {
 
         logger::info("Try compatible patch for {}...", SacrosanctESP);
 
-        RE::BGSListForm* SCS_RacesFormlist = reinterpret_cast<RE::BGSListForm*>(SCS_RacesForm);
-        RE::BGSListForm* SCS_RacesVampFormlist = reinterpret_cast<RE::BGSListForm*>(SCS_RacesVampForm);
+        RE::BGSListForm* SCS_RacesFormlist = static_cast<RE::BGSListForm*>(SCS_RacesForm);
+        RE::BGSListForm* SCS_RacesVampFormlist = static_cast<RE::BGSListForm*>(SCS_RacesVampForm);
 
         if (!SCS_RacesFormlist || !SCS_RacesVampFormlist)
             return;
@@ -508,10 +530,10 @@ namespace Mus {
     //HumanoidVampireLord (HNV/NoMoreUgly)
     void RaceCompatibility::SolveCompatibleVampireLord()
     {
-        if (!Config::GetSingleton().GetSetting().GetFeature().GetCompatibleHumanoidVampireLord())
+        if (!Config::GetSingleton().GetCompatibleHumanoidVampireLord())
             return;
 
-        if (!isPlayerRaceTeraElin())
+        if (!isPlayerRaceTeraElinHumanoidVampireLord())
             return;
 
         std::string_view modname;
@@ -526,18 +548,15 @@ namespace Mus {
 
         logger::info("Try compatible patch for Vampire Lord of {}...", modname);
 
-        RE::TESForm* VampLordForm = RE::TESForm::LookupByID(VampireLordRaceID);
-        if (!VampLordForm)
-            return;
-        RE::TESRace* VampLordRace = reinterpret_cast<RE::TESRace*>(VampLordForm);
+        RE::TESRace* VampLordRace = static_cast<RE::TESRace*>(GetRace(VampireLordRaceID));
         if (!VampLordRace)
             return;
 
         RE::TESRace* ElinRace = GetElinRace(false);
         if (!ElinRace)
             return;
-        
-        RE::TESRace* DefaultRace = GetElinRace(true);
+
+        RE::TESRace* DefaultRace = static_cast<RE::TESRace*>(GetRace(DefaultRaceID));
         if (!DefaultRace)
             return;
 
@@ -551,11 +570,11 @@ namespace Mus {
             VampLordRace->data.flags -= RE::RACE_DATA::Flag::kOverlayHeadPartList;
         if (VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverrideHeadPartList))
             VampLordRace->data.flags -= RE::RACE_DATA::Flag::kOverrideHeadPartList;
-        VampLordRace->skeletonModels->SetModel(ElinRace->skeletonModels->GetModel());
+        VampLordRace->skeletonModels[RE::SEXES::kMale].SetModel(ElinRace->skeletonModels[RE::SEXES::kMale].GetModel());
+        VampLordRace->skeletonModels[RE::SEXES::kFemale].SetModel(ElinRace->skeletonModels[RE::SEXES::kFemale].GetModel());
         VampLordRace->bipedObjectNameA[RE::BIPED_OBJECTS::kTail] = ElinRace->bipedObjectNameA[RE::BIPED_OBJECTS::kTail];
         VampLordRace->faceRelatedData[RE::SEXES::kMale] = ElinRace->faceRelatedData[RE::SEXES::kMale];
         VampLordRace->faceRelatedData[RE::SEXES::kFemale] = ElinRace->faceRelatedData[RE::SEXES::kFemale];
-        //VampLordRace->faceRelatedData[RE::SEXES::kTotal] = ElinRace->faceRelatedData[RE::SEXES::kTotal];
         VampLordRace->morphRace = ElinRace;
         VampLordRace->armorParentRace = DefaultRace;
 
@@ -566,5 +585,43 @@ namespace Mus {
     {
         SolveCompatibleVampireVanilla();
         SolveCompatibleVampireSacrosanct();
+    }
+
+    void RaceCompatibility::ChangeRaceHeight()
+    {
+        if (!Config::GetSingleton().GetVanillaScale())
+            return;
+
+        RE::TESRace* elin = GetElinRace(false);
+        RE::TESRace* elinvamp = GetElinRace(true);
+
+        if (!elin || !elinvamp)
+            return;
+
+        auto& elindata = elin->data;
+        elindata.height[RE::SEXES::kMale] = 1.0f;
+        elindata.height[RE::SEXES::kFemale] = 1.0f;
+
+        auto& elinvampdata = elinvamp->data;
+        elinvampdata.height[RE::SEXES::kMale] = 1.0f;
+        elinvampdata.height[RE::SEXES::kFemale] = 1.0f;
+
+        RE::TESForm* RunTimeHorizonRun = GetFormByID(HorizonRunID, TeraElinRaceESP);
+        if (!RunTimeHorizonRun)
+        {
+            logger::error("Can't Find HorizonRun spell");
+            return;
+        }
+        
+        RE::SpellItem* HorizonRun = static_cast<RE::SpellItem*>(RunTimeHorizonRun);
+        RE::MagicItem* magicitem = HorizonRun;
+        auto& effects = magicitem->effects;
+        if (2 != effects.size())
+            return;
+
+        effects[0]->effectItem.magnitude = 20;
+        effects[1]->effectItem.magnitude = 15;
+
+        logger::info("Change to vanilla scale done");
     }
 }

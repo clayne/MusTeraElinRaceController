@@ -33,7 +33,7 @@ namespace Mus {
 
 	bool PlayerChangeElinDetector::CheckPlayerIsElin()
 	{
-		IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElin());
+		IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElinHumanoidVampireLord());
 
 		return IsPlayerElin.load();
 	}

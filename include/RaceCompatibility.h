@@ -18,9 +18,7 @@ namespace Mus {
             if (IsProblem)
                 return false;
 
-            RE::TESDataHandler* DataHandler = RE::TESDataHandler::GetSingleton();
-            auto* file = DataHandler->LookupLoadedModByName(TeraElinRaceESP);
-            if (file)
+            if (IsThereTheESP(TeraElinRaceESP))
             {
                 logger::info("Detected the TeraElinRace installed");
                 return true;
@@ -33,25 +31,36 @@ namespace Mus {
         };
 
         bool isPlayerRaceTeraElin();
+        bool isPlayerRaceTeraElinHumanoidVampireLord();
         bool RemoveHeadPartElinRacesForm();
         bool InitFormList();
         bool GetRuntimeData();
         void SolveCompatibleVampire();
         void SolveCompatibleVampireLord();
+        void ChangeRaceHeight();
+
+        inline RE::TESRace* GetRace(RE::FormID id) {
+            RE::TESRace* result = nullptr;
+            RE::TESForm* RaceForm = RE::TESForm::LookupByID(id);
+            if (RaceForm)
+            {
+                if (RaceForm->formType.get() != RE::FormType::Race)
+                    return nullptr;
+                else
+                    result = static_cast<RE::TESRace*>(RaceForm);
+            }
+            return result;
+        }
 
         inline RE::TESRace* GetElinRace(bool isVamp) {
             RE::TESRace* result = nullptr;
             if (!isVamp)
             {
-                RE::TESForm* ElinRaceForm = RE::TESForm::LookupByID(RunTimeTeraElinRaceFormID);
-                if (ElinRaceForm)
-                    result = reinterpret_cast<RE::TESRace*>(ElinRaceForm);
+               result = static_cast<RE::TESRace*>(GetRace(RunTimeTeraElinRaceFormID));
             }
             else
             {
-                RE::TESForm* ElinRaceVampForm = RE::TESForm::LookupByID(RunTimeTeraElinRaceVampFormID);
-                if (ElinRaceVampForm)
-                    result = reinterpret_cast<RE::TESRace*>(ElinRaceVampForm);
+                 result = static_cast<RE::TESRace*>(GetRace(RunTimeTeraElinRaceVampFormID));
             }
             return result;
         }
@@ -71,8 +80,6 @@ namespace Mus {
         const RE::FormID HeadPartFormList = 0x000A803F;
         const RE::FormID ArgonianFormList = 0x000A8039;
         const RE::FormID KhajiitFormList = 0x000A8036;
-
-        const RE::FormID VampireLordID = 0x0200283A;
 
         const RE::FormID PlayableFormList = 0x00000D62;
         const  RE::FormID PlayableVampFormList = 0x00000D63;
@@ -125,6 +132,8 @@ namespace Mus {
         const std::string_view NoMoreUglyVampireLordESP = "NoMoreUglyVampireLord.esp";
         const std::string_view NoMoreUglyVampireLord2RVESP = "NoMoreUglyVampireLord_2RV.esp";
         const RE::FormID VampireLordRaceID = 0x0200283A;
+
+        const RE::FormID HorizonRunID = 0x000145DF;
     };
 
 }  // namespace Mus

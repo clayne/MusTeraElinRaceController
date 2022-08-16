@@ -1,6 +1,21 @@
 #pragma once
 
+#include "direct.h"
+
 namespace Mus {
+    inline std::string GetRuntimeDirectory() 
+    {
+        char RuntimeDirectory[4096];
+        if (_getcwd(RuntimeDirectory, 4096) == NULL)
+        {
+            SKSE::stl::report_and_fail("Unable to lookup Runtime directory.");
+        }
+        std::string Directory = RuntimeDirectory;
+        Directory += "\\Data\\SKSE\\Plugins\\";
+
+        return Directory;
+    }
+
     inline RE::TESForm* GetFormByID(RE::FormID id, std::string_view modname) 
     {
         RE::TESDataHandler* DataHandler = RE::TESDataHandler::GetSingleton();
@@ -13,18 +28,10 @@ namespace Mus {
         if (!DataHandler)
             return false;
 
-        if (!REL::Module::IsVR()) //noVR
-        {
-            if (DataHandler->LookupLoadedModByName(modname) || DataHandler->LookupLoadedLightModByName(modname))
-                return true;
-        }
-        else
-        {
-            if (DataHandler->LookupLoadedModByName(modname))
-                return true;
-        }
+        auto esp = DataHandler->LookupModByName(modname);
 
-        return false;
+        return esp ? true : false;
+
     }
 
     inline std::uint32_t GetActorBaseFormID(RE::Actor* actor)
