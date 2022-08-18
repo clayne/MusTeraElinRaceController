@@ -1,7 +1,5 @@
 #pragma once
 
-#include "direct.h"
-
 namespace Mus {
     inline std::string GetRuntimeDirectory() 
     {
@@ -19,7 +17,31 @@ namespace Mus {
     inline RE::TESForm* GetFormByID(RE::FormID id, std::string_view modname) 
     {
         RE::TESDataHandler* DataHandler = RE::TESDataHandler::GetSingleton();
-        return DataHandler ? DataHandler->LookupForm(id, modname) : nullptr;
+        if (!DataHandler)
+            return nullptr;
+
+        auto esp = DataHandler->LookupModByName(modname);
+        if (!esp)
+            return nullptr;
+
+        RE::FormID index = 0;
+
+        if (REL::Module::IsVR() || !esp->IsLight())
+        {
+            RE::FormID Compileindex = esp->GetCompileIndex();
+            index = Compileindex * 0x01000000;
+        }
+        else
+        {
+            RE::FormID Compileindex = esp->GetSmallFileCompileIndex();
+            index = (Compileindex * 0x00001000) + 0xFE000000;
+        }
+
+        id += index;
+
+        RE::TESForm* result = RE::TESForm::LookupByID(id);
+
+        return result ? result : nullptr;
     }
     
     inline bool IsThereTheESP(std::string_view modname) 
@@ -31,7 +53,6 @@ namespace Mus {
         auto esp = DataHandler->LookupModByName(modname);
 
         return esp ? true : false;
-
     }
 
     inline std::uint32_t GetActorBaseFormID(RE::Actor* actor)
@@ -51,7 +72,7 @@ namespace Mus {
 
     inline std::uint16_t GetLightModIndex(RE::FormID id)
     {
-        return id / 0x00100000;
+        return id / 0x00001000;
     }
 
     inline bool IsLightMod(RE::FormID id)

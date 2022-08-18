@@ -13,6 +13,7 @@ namespace Mus {
 			EventHolder->AddEventSink<RE::TESLoadGameEvent>(this);
 			EventHolder->AddEventSink<RE::TESObjectLoadedEvent>(this);
 			EventHolder->AddEventSink<RE::TESSwitchRaceCompleteEvent>(this);
+			EventHolder->AddEventSink<RE::TESMagicEffectApplyEvent>(this);
 		}
 	}
 
@@ -58,7 +59,6 @@ namespace Mus {
 		{
 			IsRaceSexMenu.store(false);
 			IsPlayerElin.store(RaceCompatibility::GetSingleton().isPlayerRaceTeraElinHumanoidVampireLord());
-			g_frameEventDispatcher.removeListener(&PlayerGenderDetector::GetSingleton());
 			ActorManager::GetSingleton().UpdatePlayerFaceNodes();
 			//g_frameEventDispatcher.removeListener(&RaceSexMenuTracker::GetSingleton());
 		}
@@ -70,8 +70,7 @@ namespace Mus {
 		InputEventHandler::GetSingleton()->Register();
 		RaceCompatibility::GetSingleton().LoadRaceCompatibility();
 		RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
-		RaceCompatibility::GetSingleton().SolveCompatibleVampireLord();
-
+		//RaceCompatibility::GetSingleton().SolveCompatibleVampireLord();
 		if (!ActorManager::GetSingleton().RegisterPlayer())
 		{
 			logger::error("Failed register player on ElinAnimation");
@@ -112,7 +111,7 @@ namespace Mus {
 		if (!npc)
 			return EventResult::kContinue;
 
-		logger::error("Detected Race change Event : {:x}", npc->formID);
+		//logger::error("Detected Race change Event : {:x}", npc->formID);
 
 		if (npc->formID == 0x7 || npc->formID == 0x14)
 		{
@@ -123,18 +122,34 @@ namespace Mus {
 			{
 				RaceCompatibility::GetSingleton().LoadRaceCompatibility();
 				RaceCompatibility::GetSingleton().RemoveHeadPartElinRacesForm();
-				RaceCompatibility::GetSingleton().SolveCompatibleVampireLord();
-
+				//RaceCompatibility::GetSingleton().SolveCompatibleVampireLord();
 				if (!ActorManager::GetSingleton().RegisterPlayer())
 				{
 					logger::error("Failed register player on ElinAnimation");
 				}
+
+				ActorManager::GetSingleton().UpdatePlayerFaceNodes();
 			}
 		}
-
 		return EventResult::kContinue;
 	}
 
+	EventResult EventHandler::ProcessEvent(const RE::TESMagicEffectApplyEvent* evn, RE::BSTEventSource<RE::TESMagicEffectApplyEvent>*)
+	{
+		if (!evn || !evn->caster || !evn->caster.get())
+			return EventResult::kContinue;
+
+		auto* npc = evn->caster.get();
+
+		if (npc && isPlayer(npc->formID) && IsPlayerElin.load())
+		{
+			if (evn->magicEffect == VampireLordMagicEffectID)
+				RaceCompatibility::GetSingleton().SolveCompatibleVampireLord();
+			else if (evn->magicEffect == RevertVampireLordMagicEffectID)
+				RaceCompatibility::GetSingleton().RevertCompatibleVampireLord();
+		}
+		return EventResult::kContinue;
+	}
 
 	
 	void InputEventHandler::Register()
@@ -197,7 +212,6 @@ namespace Mus {
 
 			logger::debug("Unpress Button Event : {}", button->GetIDCode());
 		}
-
 		return EventResult::kContinue;
 	}
 }

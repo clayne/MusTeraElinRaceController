@@ -46,7 +46,7 @@ namespace Mus {
         RE::TESForm* RunTimePlayableForm = GetFormByID(PlayableFormList, RaceCompatibilityESP);
         if (!RunTimePlayableForm)
         {
-            logger::error("Can't Find RaceCompatibilityFormList");
+            logger::error("Can't Find RaceCompatibility FormList");
             IsProblem = true;
             return false;
         }
@@ -55,7 +55,7 @@ namespace Mus {
         RE::TESForm* RunTimePlayableVampForm = GetFormByID(PlayableVampFormList, RaceCompatibilityESP);
         if (!RunTimePlayableVampForm)
         {
-            logger::error("Can't Find RaceCompatibilityFormList");
+            logger::error("Can't Find RaceCompatibility VampireFormList");
             IsProblem = true;
             return false;
         }
@@ -76,9 +76,14 @@ namespace Mus {
         if (!P)
             return false;
 
-        if (P->GetActorBase()->GetRace()->formID == RunTimeTeraElinRaceFormID || P->GetActorBase()->GetRace()->formID == RunTimeTeraElinRaceVampFormID)
+        if (P->GetActorBase()->GetRace()->formID == RunTimeTeraElinRaceFormID)
         {
             logger::info("Detected that Player Race is TeraElinRace");
+            return true;
+        }
+        else if (P->GetActorBase()->GetRace()->formID == RunTimeTeraElinRaceVampFormID)
+        {
+            logger::info("Detected that Player Race is TeraElinRace Vampire");
             return true;
         }
         return false;
@@ -548,7 +553,7 @@ namespace Mus {
 
         logger::info("Try compatible patch for Vampire Lord of {}...", modname);
 
-        RE::TESRace* VampLordRace = static_cast<RE::TESRace*>(GetRace(VampireLordRaceID));
+        RE::TESRace* VampLordRace = GetRace(VampireLordRaceID);
         if (!VampLordRace)
             return;
 
@@ -556,29 +561,90 @@ namespace Mus {
         if (!ElinRace)
             return;
 
-        RE::TESRace* DefaultRace = static_cast<RE::TESRace*>(GetRace(DefaultRaceID));
+        RE::TESRace* DefaultRace = GetRace(DefaultRaceID);
         if (!DefaultRace)
             return;
 
+        VampireLordVanilla.skin = VampLordRace->skin;
         VampLordRace->skin = ElinRace->skin;
+
+        VampireLordVanilla.height[RE::SEXES::kMale] = VampLordRace->data.height[RE::SEXES::kMale];
+        VampireLordVanilla.height[RE::SEXES::kFemale] = VampLordRace->data.height[RE::SEXES::kFemale];
         VampLordRace->data.height[RE::SEXES::kMale] = ElinRace->data.height[RE::SEXES::kMale];
         VampLordRace->data.height[RE::SEXES::kFemale] = ElinRace->data.height[RE::SEXES::kFemale];
-        //VampLordRace->data.height[RE::SEXES::kTotal] = ElinRace->data.height[RE::SEXES::kTotal];
-        if (!VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kFaceGenHead))
+
+        if (VampireLordVanilla.kFaceGenHead = VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kFaceGenHead); !VampireLordVanilla.kFaceGenHead)
             VampLordRace->data.flags += RE::RACE_DATA::Flag::kFaceGenHead;
-        if (VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverlayHeadPartList))
+        if (VampireLordVanilla.kOverlayHeadPartList = VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverlayHeadPartList); VampireLordVanilla.kOverlayHeadPartList)
             VampLordRace->data.flags -= RE::RACE_DATA::Flag::kOverlayHeadPartList;
-        if (VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverrideHeadPartList))
+        if (VampireLordVanilla.kOverrideHeadPartList = VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverrideHeadPartList); VampireLordVanilla.kOverrideHeadPartList)
             VampLordRace->data.flags -= RE::RACE_DATA::Flag::kOverrideHeadPartList;
+
+        nif::setBSFixedString(VampireLordVanilla.skeletonModels[RE::SEXES::kMale], VampLordRace->skeletonModels[RE::SEXES::kMale].GetModel());
+        nif::setBSFixedString(VampireLordVanilla.skeletonModels[RE::SEXES::kFemale], VampLordRace->skeletonModels[RE::SEXES::kFemale].GetModel());
         VampLordRace->skeletonModels[RE::SEXES::kMale].SetModel(ElinRace->skeletonModels[RE::SEXES::kMale].GetModel());
         VampLordRace->skeletonModels[RE::SEXES::kFemale].SetModel(ElinRace->skeletonModels[RE::SEXES::kFemale].GetModel());
+
         VampLordRace->bipedObjectNameA[RE::BIPED_OBJECTS::kTail] = ElinRace->bipedObjectNameA[RE::BIPED_OBJECTS::kTail];
+
+        VampireLordVanilla.faceRelatedData[RE::SEXES::kMale] = VampLordRace->faceRelatedData[RE::SEXES::kMale];
+        VampireLordVanilla.faceRelatedData[RE::SEXES::kFemale] = VampLordRace->faceRelatedData[RE::SEXES::kFemale];
         VampLordRace->faceRelatedData[RE::SEXES::kMale] = ElinRace->faceRelatedData[RE::SEXES::kMale];
         VampLordRace->faceRelatedData[RE::SEXES::kFemale] = ElinRace->faceRelatedData[RE::SEXES::kFemale];
+
+        VampireLordVanilla.morphRace = VampLordRace->morphRace;
         VampLordRace->morphRace = ElinRace;
+        VampireLordVanilla.armorParentRace = VampLordRace->armorParentRace;
         VampLordRace->armorParentRace = DefaultRace;
 
         logger::info("Compatible patch for Vampire Lord of {} done", modname);
+    }
+    
+    void RaceCompatibility::RevertCompatibleVampireLord()
+    {
+        if (!Config::GetSingleton().GetCompatibleHumanoidVampireLord())
+            return;
+
+        if (!isPlayerRaceTeraElinHumanoidVampireLord())
+            return;
+
+        std::string_view modname;
+        if (IsThereTheESP(HumanoidVampireLordESP))
+            modname = HumanoidVampireLordESP;
+        else if (IsThereTheESP(NoMoreUglyVampireLordESP))
+            modname = NoMoreUglyVampireLordESP;
+        else if (IsThereTheESP(NoMoreUglyVampireLord2RVESP))
+            modname = NoMoreUglyVampireLord2RVESP;
+        else
+            return;
+
+        logger::info("Try revert compatible patch for Vampire Lord of {}...", modname);
+
+        RE::TESRace* VampLordRace = GetRace(VampireLordRaceID);
+        if (!VampLordRace)
+            return;
+
+        VampLordRace->skin = VampireLordVanilla.skin;
+
+        VampLordRace->data.height[RE::SEXES::kMale] = VampireLordVanilla.height[RE::SEXES::kMale];
+        VampLordRace->data.height[RE::SEXES::kFemale] = VampireLordVanilla.height[RE::SEXES::kFemale];
+
+        if (VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kFaceGenHead) && !VampireLordVanilla.kFaceGenHead)
+            VampLordRace->data.flags -= RE::RACE_DATA::Flag::kFaceGenHead;
+        if (!VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverlayHeadPartList) && VampireLordVanilla.kOverlayHeadPartList)
+            VampLordRace->data.flags += RE::RACE_DATA::Flag::kOverlayHeadPartList;
+        if (!VampLordRace->data.flags.all(RE::RACE_DATA::Flag::kOverrideHeadPartList) && VampireLordVanilla.kOverrideHeadPartList)
+            VampLordRace->data.flags += RE::RACE_DATA::Flag::kOverrideHeadPartList;
+
+        VampLordRace->skeletonModels[RE::SEXES::kMale].SetModel(VampireLordVanilla.skeletonModels[RE::SEXES::kMale].c_str());
+        VampLordRace->skeletonModels[RE::SEXES::kFemale].SetModel(VampireLordVanilla.skeletonModels[RE::SEXES::kFemale].c_str());
+        //VampLordRace->bipedObjectNameA[RE::BIPED_OBJECTS::kTail] = ElinRace->bipedObjectNameA[RE::BIPED_OBJECTS::kTail];
+        VampLordRace->faceRelatedData[RE::SEXES::kMale] = VampireLordVanilla.faceRelatedData[RE::SEXES::kMale];
+        VampLordRace->faceRelatedData[RE::SEXES::kFemale] = VampireLordVanilla.faceRelatedData[RE::SEXES::kFemale];
+        VampLordRace->morphRace = VampireLordVanilla.morphRace;
+        VampLordRace->armorParentRace = VampireLordVanilla.armorParentRace;
+
+        logger::info("Revert compatible patch for Vampire Lord of {} done", modname);
     }
 
     void RaceCompatibility::SolveCompatibleVampire()
@@ -589,6 +655,7 @@ namespace Mus {
 
     void RaceCompatibility::ChangeRaceHeight()
     {
+        Config::GetSingleton().LoadExtraConfig();
         if (!Config::GetSingleton().GetVanillaScale())
             return;
 

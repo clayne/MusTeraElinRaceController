@@ -10,6 +10,7 @@ namespace Mus {
         };
 
         bool LoadConfig();
+        bool LoadExtraConfig();
 
         //Debug
         [[nodiscard]] inline spdlog::level::level_enum GetLogLevel() const noexcept {
@@ -56,6 +57,9 @@ namespace Mus {
         }
         [[nodiscard]] inline  clock_t GetEmotionScanDelay() const noexcept {
             return EmotionScanDelay;
+        }
+        [[nodiscard]] inline  clock_t GetEmotionForceResetTime() const noexcept {
+            return EmotionForceResetTime;
         }
         [[nodiscard]] inline  clock_t GetVanillaScale() const noexcept {
             return VanillaScale;
@@ -182,6 +186,7 @@ namespace Mus {
         bool EmotionHeadOverlayOnlyPlayer = false;
         std::uint8_t EmotionEffectActiveThreshold = 70;
         clock_t EmotionScanDelay = 0;
+        clock_t EmotionForceResetTime = 30000;
         bool VanillaScale = false;
 
         //Animation
@@ -280,64 +285,6 @@ namespace Mus {
             }
         }
 
-        inline RE::FormID getHex(std::string hexstr)
-        {
-            return (RE::FormID)strtoul(hexstr.c_str(), 0, 16);
-        }
-
-        inline int GetConfigSettingsIntValue(std::string line, std::string& variable)
-        {
-            int value = 0;
-            std::vector<std::string> splittedLine = split(line, '=');
-            variable = "";
-            if (splittedLine.size() > 1)
-            {
-                variable = splittedLine[0];
-                trim(variable);
-
-                std::string valuestr = splittedLine[1];
-                trim(valuestr);
-                value = std::stoi(valuestr);
-            }
-            return value;
-        }
-
-        inline float GetConfigSettingsFloatValue(std::string line, std::string& variable)
-        {
-            float value = 0;
-            std::vector<std::string> splittedLine = split(line, '=');
-            variable = "";
-            if (splittedLine.size() > 1)
-            {
-                variable = splittedLine[0];
-                trim(variable);
-
-                std::string valuestr = splittedLine[1];
-                trim(valuestr);
-                value = strtof(valuestr.c_str(), 0);
-            }
-            return value;
-        }
-
-        inline bool GetConfigSettingsBoolValue(std::string line, std::string& variable)
-        {
-            bool value = false;
-            std::vector<std::string> splittedLine = split(line, '=');
-            variable = "";
-            if (splittedLine.size() > 1)
-            {
-                variable = splittedLine[0];
-                trim(variable);
-
-                std::string valuestr = splittedLine[1];
-                trim(valuestr);
-                valuestr = lowLetter(valuestr.c_str());
-
-                value = (valuestr.compare("true") == 0);
-            }
-            return value;
-        }
-
         inline std::string GetConfigSettingsStringValue(std::string line, std::string& variable)
         {
             std::string value = "";
@@ -355,26 +302,43 @@ namespace Mus {
             return value;
         }
 
-        inline RE::FormID GetConfigSettingsFormIDValue(std::string line, std::string& variable)
+        inline RE::FormID getHex(std::string hexstr)
         {
-            RE::FormID value;
-            std::vector<std::string> splittedLine = split(line, '=');
-            variable = "";
-            if (splittedLine.size() > 1)
-            {
-                variable = splittedLine[0];
-                trim(variable);
+            return (RE::FormID)strtoul(hexstr.c_str(), 0, 16);
+        }
 
-                std::string valuestr = splittedLine[1];
-                trim(valuestr);
-                value = getHex(valuestr.c_str());
-            }
+        inline int GetConfigSettingsIntValue(std::string valuestr)
+        {
+            int value = 0;
+            value = std::stoi(valuestr);
             return value;
         }
 
-        inline std::vector<RE::FormID> ConfigLineSplitterFormID(std::string& line)
+        inline float GetConfigSettingsFloatValue(std::string valuestr)
         {
-            std::vector<std::string> SplittedFormID = split(line, '|');
+            float value = 0;
+            value = strtof(valuestr.c_str(), 0);
+            return value;
+        }
+
+        inline bool GetConfigSettingsBoolValue(std::string valuestr)
+        {
+            bool value = false;
+            valuestr = lowLetter(valuestr.c_str());
+            value = (valuestr.compare("true") == 0);
+            return value;
+        }
+
+        inline RE::FormID GetConfigSettingsFormIDValue(std::string valuestr)
+        {
+            RE::FormID value;
+            value = getHex(valuestr.c_str());
+            return value;
+        }
+
+        inline std::vector<RE::FormID> ConfigLineSplitterFormID(std::string valuestr)
+        {
+            std::vector<std::string> SplittedFormID = split(valuestr, '|');
             std::vector<RE::FormID> value;
             for (size_t index = 0; index < SplittedFormID.size(); index++)
             {

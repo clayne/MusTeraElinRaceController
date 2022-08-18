@@ -7,7 +7,8 @@ namespace Mus {
 		public RE::BSTEventSink<RE::MenuOpenCloseEvent>,
 		public RE::BSTEventSink<RE::TESLoadGameEvent>, 
 		public RE::BSTEventSink<RE::TESObjectLoadedEvent>,
-		public RE::BSTEventSink<RE::TESSwitchRaceCompleteEvent>/*,
+		public RE::BSTEventSink<RE::TESSwitchRaceCompleteEvent>,
+		public RE::BSTEventSink<RE::TESMagicEffectApplyEvent>/*,
 		public RE::BSTEventSink<RE::InputEvent> */{
 
 	public:
@@ -23,6 +24,7 @@ namespace Mus {
 		EventResult ProcessEvent(const RE::TESLoadGameEvent* evn, RE::BSTEventSource<RE::TESLoadGameEvent>*) override;
 		EventResult ProcessEvent(const RE::TESObjectLoadedEvent* evn, RE::BSTEventSource<RE::TESObjectLoadedEvent>*) override;
 		EventResult ProcessEvent(const RE::TESSwitchRaceCompleteEvent* evn, RE::BSTEventSource<RE::TESSwitchRaceCompleteEvent>*) override;
+		EventResult ProcessEvent(const RE::TESMagicEffectApplyEvent* evn, RE::BSTEventSource<RE::TESMagicEffectApplyEvent>*) override;
 		//EventResult ProcessEvent(const RE::InputEvent* evn, RE::BSTEventSource<RE::InputEvent>*) override;
 
 	private:
@@ -32,6 +34,9 @@ namespace Mus {
 		/*std::uint32_t EarLKey = 0x0;
 		std::uint32_t EarRKey = 0x0;
 		std::uint32_t TailKey = 0x0;*/
+
+		const RE::FormID VampireLordMagicEffectID = 0x0200283C;
+		const RE::FormID RevertVampireLordMagicEffectID = 0x0200CD5B;
 	};
 
 	class InputEventHandler : 

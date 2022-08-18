@@ -9,6 +9,7 @@ namespace Mus
 
 		beforeTime = clock();
 		cooldown = Config::GetSingleton().GetEmotionScanDelay();
+		PlayerFirstCooldown = Config::GetSingleton().GetEmotionForceResetTime();
 		ActiveThreshold = EmotionEffectActiveThreshold;
 		isEnable = Config::GetSingleton().GetEnableEmotion();
 		isEyes = Config::GetSingleton().GetEmotionEyes();
@@ -55,7 +56,7 @@ namespace Mus
 		
 		if (PlayerRun)
 		{
-			if (clock() - PlayerFirstTime >= PlayerFirstCooldown)
+			if (PlayerFirstCooldown <= 1 || clock() - PlayerFirstTime >= PlayerFirstCooldown)
 			{
 				logger::info("Player headpart scanned and updated while RaceSexMenu loading is done");
 				PlayerRun = false;
@@ -85,8 +86,8 @@ namespace Mus
 		if (!expressionData)
 			return std::to_underlying(expression_type::mood_neutral);
 
-		for (std::uint32_t index = 0; index < expressionData->expressionKeyFrameResult.count; ++index) {
-			if (expressionData->expressionKeyFrameResult.values[index] > expressionData->expressionKeyFrameResult.values[expression]) {
+		for (std::uint32_t index = 0; index < expressionData->unk0C0.count; ++index) {
+			if (expressionData->unk0C0.values[index] > expressionData->unk0C0.values[expression]) {
 				expression = index;
 			}
 		}
@@ -112,8 +113,8 @@ namespace Mus
 		std::uint32_t type = GetActiveMorphType();
 		std::uint8_t value = 0;
 
-		if (type < expressionData->expressionKeyFrameResult.count)
-			value = std::lround(expressionData->expressionKeyFrameResult.values[type] * 100.0f);
+		if (type < expressionData->unk0C0.count)
+			value = std::lround(expressionData->unk0C0.values[type] * 100.0f);
 
 		if (value < ActiveThreshold && CurrentActiveFaceGenMorphValue >= ActiveThreshold)
 		{
@@ -164,13 +165,13 @@ namespace Mus
 				if (IsMatchName(list.first, "Icon"))
 				{
 					if (IsMatchName(list.first, "Sad"))
-						isVisible = isTears;
+						isVisible = isVisible ? isTears : false;
 					else
-						isVisible = isIcons;
+						isVisible = isVisible ? isIcons : false;
 				}
 				else if (IsMatchName(list.first, "eye"))
 				{
-					isVisible = isEyes;
+					isVisible = isVisible ? isEyes : false;
 				}
 
 				auto alphalist = FaceNodeAlphaList.find(list.first);

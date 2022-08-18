@@ -189,7 +189,7 @@ namespace Mus {
 		if (!Player)
 			return;
 
-		ac.IsValidActor = IsPlayerElin;
+		ac.IsValidActor = IsPlayerElin.load();
 
 		if (!Player->loadedData || !Player->loadedData->data3D)
 			ac.IsValidActor = false;
@@ -201,7 +201,7 @@ namespace Mus {
 		if (!Player)
 			return;
 
-		fgd.IsValidActor = IsPlayerElin;
+		fgd.IsValidActor = IsPlayerElin.load();
 
 		if (!Player->loadedData || !Player->loadedData->data3D)
 			fgd.IsValidActor = false;
@@ -223,6 +223,9 @@ namespace Mus {
 
 	void ActorManager::UpdatePlayerFaceNodes()
 	{
+		if (!IsPlayerElin.load())
+			return;
+
 		auto* Player = RE::PlayerCharacter::GetSingleton();
 		if (!Player)
 			return;

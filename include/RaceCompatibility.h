@@ -37,6 +37,7 @@ namespace Mus {
         bool GetRuntimeData();
         void SolveCompatibleVampire();
         void SolveCompatibleVampireLord();
+        void RevertCompatibleVampireLord();
         void ChangeRaceHeight();
 
         inline RE::TESRace* GetRace(RE::FormID id) {
@@ -53,6 +54,9 @@ namespace Mus {
         }
 
         inline RE::TESRace* GetElinRace(bool isVamp) {
+            if (IsProblem)
+                return nullptr;
+
             RE::TESRace* result = nullptr;
             if (!isVamp)
             {
@@ -132,6 +136,20 @@ namespace Mus {
         const std::string_view NoMoreUglyVampireLordESP = "NoMoreUglyVampireLord.esp";
         const std::string_view NoMoreUglyVampireLord2RVESP = "NoMoreUglyVampireLord_2RV.esp";
         const RE::FormID VampireLordRaceID = 0x0200283A;
+
+        struct VampireLordRecord {
+            RE::TESObjectARMO* skin = nullptr;
+            float height[RE::SEXES::kTotal] = {0.0f, 0.0f};
+            bool kFaceGenHead = false;
+            bool kOverlayHeadPartList = false;
+            bool kOverrideHeadPartList = false;
+            RE::BSFixedString skeletonModels[RE::SEXES::kTotal];
+            RE::TESRace::FaceRelatedData* faceRelatedData[RE::SEXES::kTotal];
+            RE::TESRace* morphRace;
+            RE::TESRace* armorParentRace;
+        };
+
+        VampireLordRecord VampireLordVanilla;
 
         const RE::FormID HorizonRunID = 0x000145DF;
     };

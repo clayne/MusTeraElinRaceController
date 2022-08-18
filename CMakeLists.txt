@@ -8,7 +8,8 @@ project(
         MusTeraElinRaceController
         VERSION 1.1.1
         DESCRIPTION "TeraElinRace Feature Controller by Acro."
-        LANGUAGES CXX)
+        LANGUAGES CXX
+)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
@@ -18,20 +19,18 @@ include(GNUInstallDirs)
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc
-        @ONLY)
+        @ONLY
+)
 
 set(headers
         include/dirent.h
-        include/magic_enum.hpp
         include/Utility.hpp
         include/nifUtil.h
         include/Config.h
         include/RaceCompatibility.h
         include/ConsoleLog.h
         include/PapyrusScripts.h
-        include/PlayerGenderDetector.h
         include/FaceGenMorphDetector.h
-        include/PlayerChangeElinDetector.h
         include/HeadPartExplorer.h
         include/Hook.h
         include/HookEvent.h
@@ -48,9 +47,7 @@ set(sources
         src/RaceCompatibility.cpp
         src/ConsoleLog.cpp
         src/PapyrusScripts.cpp
-        src/PlayerGenderDetector.cpp
         src/FaceGenMorphDetector.cpp
-        src/PlayerChangeElinDetector.cpp
         src/HeadPartExplorer.cpp
         src/Hook.cpp
         src/HookEvent.cpp
@@ -59,7 +56,8 @@ set(sources
         src/Store.cpp
         src/Main.cpp
 
-        ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+        ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+)
 
 source_group(
         TREE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -72,6 +70,7 @@ source_group(
 ########################################################################################################################
 find_package(CommonLibSSE REQUIRED)
 find_package(ryml CONFIG REQUIRED)
+find_package(magic_enum CONFIG REQUIRED)
 find_path(ARTICUNO_INCLUDE_DIRS "articuno/articuno.h")
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources})
@@ -86,12 +85,7 @@ target_compile_features(
 target_compile_definitions(
     ${PROJECT_NAME}
     PUBLIC
-        WINVER=0x0601	# windows 7, minimum supported version by skyrim special edition
-        _WIN32_WINNT=0x0601
-        "$<$<BOOL:${SKSE_SUPPORT_XBYAK}>:SKSE_SUPPORT_XBYAK=1>"
-        "$<$<BOOL:${ENABLE_SKYRIM_SE}>:ENABLE_SKYRIM_SE=1>"
-        "$<$<BOOL:${ENABLE_SKYRIM_AE}>:ENABLE_SKYRIM_AE=1>"
-        "$<$<BOOL:${ENABLE_SKYRIM_VR}>:ENABLE_SKYRIM_VR=1>"
+        "$<$<BOOL:${USE_COMMONLIBSSE_NG}>:USE_COMMONLIBSSE_NG=1>"
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -109,6 +103,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
         ryml::ryml
+        magic_enum::magic_enum
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/detours/lib.X64/detours.lib>
 )
 

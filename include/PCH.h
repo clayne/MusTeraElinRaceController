@@ -40,6 +40,7 @@
 #include <condition_variable>
 #include <cstring>
 #include <deque>
+#include <direct.h>
 #include <exception>
 #include <execution>
 #include <filesystem>
@@ -138,10 +139,8 @@ namespace util {
 #include "HookEvent.h"
 
 #include "FaceGenMorphDetector.h"
-#include "PlayerGenderDetector.h"
 #include "HeadPartExplorer.h"
 #include "RaceCompatibility.h"
-#include "PlayerChangeElinDetector.h"
 
 #include "AnimationController.h"
 #include "ActorManager.h"
